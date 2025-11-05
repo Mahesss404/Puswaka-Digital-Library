@@ -4,12 +4,15 @@
 @tailwind utilities;
 
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+  background: #4995ED;
 }
 
 .read-the-docs {
   color: #888;
+}
+@theme {
+  --color-primary: #4995ED;
+  --color-secondary: #10b981;
 }

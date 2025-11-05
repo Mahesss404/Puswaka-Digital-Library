@@ -1,10 +1,31 @@
-import React from 'react';
-import {Link} from "react-router-dom";
+import React, {useEffect, useState} from 'react';
+import {Link, useNavigate} from "react-router-dom";
 import App from "../App.jsx";
 import About from "./About.jsx";
+
 import NotFoundPage from "../NotFoundPage.jsx";
 
 const Home = () => {
+    const navigate = useNavigate();
+    const [username, setUsername] = useState("");
+
+    useEffect(() => {
+        const isAuth = localStorage.getItem("auth");
+        const name = localStorage.getItem("username");
+
+        if (!isAuth) {
+            navigate("/");
+        } else {
+            setUsername(name);
+        }
+    }, [navigate]);
+
+    const handleLogout = () => {
+        localStorage.removeItem("auth");
+        localStorage.removeItem("username");
+        navigate("/");
+    };
+
         const routes  = [
                 { path: '/', element: <Home />, label: 'Home' },
                 { path: '/app', element: <App />, label: 'App' },
@@ -24,6 +45,13 @@ const Home = () => {
                 </ul>
             </nav>
             <h1>Ini Homepage</h1>
+            <h1 className="text-3xl font-bold mb-4">Selamat datang, {username} 👋</h1>
+            <button
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
+            >
+                Logout
+            </button>
         </div>
     );
 };

@@ -8,6 +8,7 @@ import About from "./pages/About.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
 import Login from "./pages/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import Verification from "./Verification.jsx";
 
 const router = createBrowserRouter([
     { path: '/',
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
     { path: '/about', element: <About />,},
     { path: '*', element: <NotFoundPage />,},
     { path: '/Login', element: <Login />,},
+    { path: '/Verification', element: <Verification />,},
 
 
 
