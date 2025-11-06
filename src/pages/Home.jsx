@@ -3,8 +3,6 @@ import {Link, useNavigate} from "react-router-dom";
 import App from "../App.jsx";
 import About from "./About.jsx";
 
-import NotFoundPage from "../NotFoundPage.jsx";
-
 const Home = () => {
     const navigate = useNavigate();
     const [username, setUsername] = useState("");
@@ -23,7 +21,7 @@ const Home = () => {
     const handleLogout = () => {
         localStorage.removeItem("auth");
         localStorage.removeItem("username");
-        navigate("/");
+        navigate("/login");
     };
 
         const routes  = [

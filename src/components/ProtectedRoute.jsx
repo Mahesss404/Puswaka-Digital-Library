@@ -4,10 +4,10 @@ import {Navigate} from "react-router-dom";
 // ProtectedRoute Auth
 
 const ProtectedRoute = ({children}) => {
-    const isAuthenticated = localStorage.getItem("auth");
+    const isAuthenticated = localStorage.getItem("auth") === "true";
 
     // logic auth
-    if (isAuthenticated) {
+    if (!isAuthenticated) {
         return <Navigate to="/login" replace />
     }
     return children
