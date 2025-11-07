@@ -2,6 +2,10 @@ import React, {useEffect, useState} from 'react';
 import {Link, useNavigate} from "react-router-dom";
 import App from "../App.jsx";
 import About from "./About.jsx";
+import Book from '../components/ui/Book.jsx';
+import { Button } from '@/components/ui/Buttons.jsx';
+import { ArrowRight } from 'lucide-react';
+import { ArrowRightIcon } from '@radix-ui/react-icons';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -31,8 +35,9 @@ const Home = () => {
 
             ]
     return (
-
-        <div className="flex flex-col gap-4">
+        
+        <div className="flex flex-col gap-4 px-[20px] py-[20px] h-screen ">
+            {/* Navbar */}
             <nav className="bg-red-300 border-red-500 border-2 p-4 rounded-md">
                 <ul className="flex gap-2  justify-between">
                     {routes.map((route) => (
@@ -42,14 +47,33 @@ const Home = () => {
                     ))}
                 </ul>
             </nav>
-            <h1>Ini Homepage</h1>
-            <h1 className="text-3xl font-bold mb-4">Selamat datang, {username} 👋</h1>
-            <button
-                onClick={handleLogout}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
-            >
-                Logout
-            </button>
+            <h2 className="text-2xl font-bold mb-4 text-start max-w-[250px] text-white">Selamat datang, {username} 👋</h2>
+            
+            {/* Book Group */}
+            <div className="flex gap-2 items-center">
+            <Book
+            coverSrc="https://placehold.co/147x217"
+            title="The Great Gatsby"
+            author="F. Scott Fitzgerald"
+            />
+            <Book
+            coverSrc="https://placehold.co/147x217"
+            title="The Great Gatsby"
+            author="F. Scott Fitzgerald"
+            />
+            <div className="whitespace-nowrap flex flex-col items-center p-4 rounded-4xl bg-red-200 opacity-75">
+                <ArrowRightIcon />
+                <h3 className="text-sm">See all</h3>
+            </div>
+            </div>
+
+            {/* Logout Button */}
+            <Button
+            variant="outline"
+            size="lg"
+            onClick={handleLogout}
+            className="bg-red-500 text-white border-red-500 border-2 rounded-md"
+            > Logout</Button>    
         </div>
     );
 };

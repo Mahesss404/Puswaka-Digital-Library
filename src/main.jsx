@@ -9,6 +9,7 @@ import NotFoundPage from "./NotFoundPage.jsx";
 import Login from "./pages/Login.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Verification from "./Verification.jsx";
+import IdCard from "@/pages/IdCard.jsx";
 
 const router = createBrowserRouter([
     { path: '/',
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
     { path: '*', element: <NotFoundPage />,},
     { path: '/login', element: <Login />,},
     { path: '/verification', element: <Verification />,},
+    { path: '/idcard', element: <IdCard />,},
 
 
 

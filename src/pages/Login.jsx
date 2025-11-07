@@ -24,26 +24,105 @@ const Login = () => {
 
 
     return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="">
+        <div className="flex items-center justify-center min-h-screen p-16">
+            <div className="w-full">
                 <form
                     onSubmit={handleLogin}
-                    className="bg-white p-8 rounded-2xl shadow-md w-80"
+                    className="flex flex-col bg-white p-8 rounded-2xl shadow-md h-full max-w-[700px]  mx-auto"
                 >
                     <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
 
-                    <input
-                        type="text"
-                        placeholder="Masukan nama"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full p-2 bg-background border border-[#d9d9d9] rounded-md mb-4"
-                    />
-                    <input
-                        type="password"
-                        placeholder="Masukan Password"
-                        className="w-full p-2 bg-background border border-[#d9d9d9] rounded-md mb-4"
-                    />
+                    {/* Nama */}
+                    <div className="mb-4 text-start">
+                        <label
+                            htmlFor="nama"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Nama Lengkap
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            name="nama"
+                            id="nama"
+                            placeholder="John Smith"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full p-2 bg-background border border-[#d9d9d9] rounded-md focus:ring-2 focus:ring-blue-400 outline-none "
+                        />
+                    </div>
+
+                    {/* Nis */}
+                    <div className="mb-4 text-start">
+                        <label
+                            htmlFor="nis"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Nis
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            name="nis"
+                            id="nis"
+                            placeholder="10997"
+                            className="w-full p-2 bg-background border border-[#d9d9d9] rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                        />
+                    </div>
+
+                    {/* Nomor Telepon */}
+                    <div className="mb-4 text-start" >
+                        <label
+                            htmlFor="number"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Nomor Telepon
+                        </label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            name="number"
+                            id="number"
+                            required
+                            placeholder="+62 89123456789"
+                            className="w-full p-2 bg-background border border-[#d9d9d9] rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                        />
+                    </div>
+
+                    {/* Alamat */}
+                    <div className="mb-4 text-start" >
+                        <label
+                            htmlFor="address"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Alamat
+                        </label>
+                        <textarea
+                            name="address"
+                            id="address"
+                            required
+                            placeholder="Jl.mangga..."
+                            className="w-full p-2 bg-background border border-[#d9d9d9] rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                        />
+                    </div>
+
+                    {/* Password */}
+                    <div className="mb-6 text-start">
+                        <label
+                            htmlFor="password"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Password
+                        </label>
+                        <input
+                            name="password"
+                            id="password"
+                            type="password"
+                            required
+                            placeholder="Password"
+                            className="w-full p-2 bg-background border border-[#d9d9d9] rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                        />
+                    </div>
 
                     <button
                         type="submit"
