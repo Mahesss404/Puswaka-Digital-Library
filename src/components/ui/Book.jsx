@@ -6,12 +6,14 @@ import React from 'react';
  * - coverSrc: image URL of the book cover
  * - title: book title text
  * - author: author name (optional)
+ * - genre: book genre (optional)
  * - className: extra classes for the outer wrapper (optional)
+ * - textColor: text color class (optional, defaults to text-white for dark backgrounds)
  */
-const Book = ({ coverSrc, title, author = '' }) => {
+const Book = ({ coverSrc, title, author = '', genre = '', className = '', }) => {
   return (
-    <div className={`max-w-[147px] select-none `}>
-      <div className="relative w-min-[148px] h-min-[127px] overflow-hidden rounded-md shadow-sm ring-1 ring-black/5 bg-white">
+    <div className={`max-w-[147px] sm:max-w-[160px] select-none flex-shrink-0 ${className}`}>
+      <div className="relative w-full min-w-[147px] sm:min-w-[160px] h-[217px] sm:h-[240px] overflow-hidden rounded-md shadow-sm bg-white">
         <img
           src={coverSrc}
           alt={title}
@@ -19,12 +21,19 @@ const Book = ({ coverSrc, title, author = '' }) => {
           loading="lazy"
         />
       </div>
-      <div className="mt-1">
-        <h3 className="text-[11px] leading-tight font-semibold text-white line-clamp-1">
+      <div className="mt-2">
+        <h3 className={`text-[11px] sm:text-[12px] leading-tight font-semibold line-clamp-2`}>
           {title}
         </h3>
         {author ? (
-          <p className="text-[10px] leading-tight text-white/80 line-clamp-1">By {author}</p>
+          <p className={`text-[10px] sm:text-[11px] leading-tight line-clamp-1 mt-0.5`}>
+            By {author}
+          </p>
+        ) : null}
+        {genre ? (
+          <p className={`text-[9px] sm:text-[10px] leading-tight line-clamp-1 mt-0.5`}>
+            {genre}
+          </p>
         ) : null}
       </div>
     </div>
