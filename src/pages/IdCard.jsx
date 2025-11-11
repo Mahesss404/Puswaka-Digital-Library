@@ -75,7 +75,7 @@ const IdCard = () => {
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
-                        className="inline-flex items-center gap-2 bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer hover:bg-gray-500 transition cursor-pointer"
+                        className="w-full inline-flex items-center gap-2 bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer hover:bg-gray-500 transition cursor-pointer"
                     />
                 </div>
 
