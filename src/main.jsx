@@ -7,6 +7,7 @@ import Home from "./pages/Home.jsx";
 import About from "./pages/About.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
 import Login from "./pages/Login.jsx";
+import Registration from "./pages/Registration.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Verification from "./Verification.jsx";
 import IdCard from "@/pages/IdCard.jsx";
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
     { path: '/about', element: <About />,},
     { path: '*', element: <NotFoundPage />,},
     { path: '/login', element: <Login />,},
+    { path: '/registration', element: <Registration />,},
     { path: '/verification', element: <Verification />,},
     { path: '/idcard', element: <IdCard />,},
     { path: '/book/:id', element: <BookDetail />,},

@@ -2,8 +2,7 @@
 // Replace the placeholder values with your actual Firebase config
 
 import { initializeApp } from 'firebase/app';
-import { getAuth, RecaptchaVerifier } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // Your web app's Firebase configuration
 // Get this from Firebase Console > Project Settings > General > Your apps
@@ -23,30 +22,5 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
-
-// Initialize Firestore
-export const db = getFirestore(app);
-
-// Helper function to initialize RecaptchaVerifier
-export const initializeRecaptcha = (containerId = 'recaptcha-container') => {
-  // Clear any existing recaptcha
-  const existingRecaptcha = window.recaptchaVerifier;
-  if (existingRecaptcha) {
-    existingRecaptcha.clear();
-  }
-
-  window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-    'size': 'invisible',
-    'callback': () => {
-      // reCAPTCHA solved, allow signInWithPhoneNumber.
-    },
-    'expired-callback': () => {
-      // Response expired. Ask user to solve reCAPTCHA again.
-    }
-  });
-
-  return window.recaptchaVerifier;
-};
-
 export default app;
 
