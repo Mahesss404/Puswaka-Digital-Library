@@ -202,6 +202,10 @@ const Home = () => {
         setIsSearchOpen(false);
     };
 
+    const handleBookClick = (bookId) => {
+        navigate(`/book/${bookId}`);
+    };
+
     return (
         <div className="min-h-screen bg-white px-8 lg:px-12">
             {/* Top Navigation Bar */}
@@ -324,11 +328,13 @@ const Home = () => {
                                 {featuredBooks.map((book, index) => (
                                     <Book
                                         key={book.id}
+                                        id={book.id}
                                         coverSrc={book.coverSrc}
                                         title={book.title}
                                         author={book.author}
                                         genre={book.genre}
-                                        className="snap-start"
+                                        className="snap-start text-white"
+                                        onClick={handleBookClick}
                                     />
                                 ))}
                                 {/* See All Button */}
@@ -412,12 +418,14 @@ const Home = () => {
                             {recommendationBooks.map((book) => (
                                 <Book
                                     key={book.id}
+                                    id={book.id}
                                     coverSrc={book.coverSrc}
                                     title={book.title}
                                     author={book.author}
                                     genre={book.genre}
                                     textColor="text-gray-900"
                                     className="snap-start"
+                                    onClick={handleBookClick}
                                 />
                             ))}
                         </div>
@@ -440,12 +448,14 @@ const Home = () => {
                                 {borrowedBooks.map((book) => (
                                     <div key={book.id} className="flex-shrink-0">
                                         <Book
+                                            id={book.id}
                                             coverSrc={book.coverSrc}
                                             title={book.title}
                                             author={book.author}
                                             genre={book.genre}
                                             textColor="text-gray-900"
                                             className="snap-start"
+                                            onClick={handleBookClick}
                                         />
                                         <p className="text-xs sm:text-sm text-gray-600 mt-1">
                                             Due: {new Date(book.dueDate).toLocaleDateString()}
@@ -481,12 +491,14 @@ const Home = () => {
                                     {searchResults.map((book) => (
                                         <Book
                                             key={book.id}
+                                            id={book.id}
                                             coverSrc={book.coverSrc}
                                             title={book.title}
                                             author={book.author}
                                             genre={book.genre}
                                             textColor="text-gray-900"
                                             className="snap-start"
+                                            onClick={handleBookClick}
                                         />
                                     ))}
                                 </div>
