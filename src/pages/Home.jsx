@@ -2,6 +2,9 @@ import React, {useEffect, useState, useRef} from 'react';
 import {useNavigate} from "react-router-dom";
 import Book from '../components/ui/Book.jsx';
 import { Menu, Search, Bell, ChevronRight, Brain, Heart, Sparkles, Apple, X, Home as HomeIcon } from 'lucide-react';
+import { collection, query, where, onSnapshot, getDocs, getDoc, doc as firestoreDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -15,16 +18,131 @@ const Home = () => {
     const menuRef = useRef(null);
     const searchRef = useRef(null);
 
-    useEffect(() => {
-        const isAuth = localStorage.getItem("auth");
-        const name = localStorage.getItem("username");
+    const [userEmail, setUserEmail] = useState("");
+    const [memberId, setMemberId] = useState(null);
+    const [borrowedBooks, setBorrowedBooks] = useState([]);
 
-        if (!isAuth) {
-            navigate("/");
-        } else {
-            setUsername(name);
-        }
+    useEffect(() => {
+        // Listen to auth state changes
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setUserEmail(user.email || "");
+                setUsername(user.displayName || user.email?.split("@")[0] || "");
+                // Store auth state for compatibility
+                localStorage.setItem("auth", "true");
+                localStorage.setItem("username", user.displayName || user.email?.split("@")[0] || "");
+            } else {
+                localStorage.removeItem("auth");
+                localStorage.removeItem("username");
+                navigate("/");
+            }
+        });
+
+        return () => unsubscribeAuth();
     }, [navigate]);
+
+    // Find member by email and listen to borrowed books
+    useEffect(() => {
+        if (!userEmail) return;
+
+        let memberUnsubscribe;
+        let borrowsUnsubscribe;
+
+        const findMemberAndListenBorrows = async () => {
+            try {
+                // Find member by email
+                const membersQuery = query(
+                    collection(db, 'members'),
+                    where('email', '==', userEmail)
+                );
+                const membersSnapshot = await getDocs(membersQuery);
+
+                if (!membersSnapshot.empty) {
+                    const memberDoc = membersSnapshot.docs[0];
+                    const memberData = { id: memberDoc.id, ...memberDoc.data() };
+                    setMemberId(memberDoc.id);
+
+                    // Listen to active borrows for this member
+                    borrowsUnsubscribe = onSnapshot(
+                        query(
+                            collection(db, 'borrows'),
+                            where('memberId', '==', memberDoc.id),
+                            where('status', '==', 'borrowed')
+                        ),
+                        async (snapshot) => {
+                            const borrowPromises = snapshot.docs.map(async (doc) => {
+                                const borrowData = doc.data();
+                                
+                                try {
+                                    // Try to get book by ID directly
+                                    const bookRef = firestoreDoc(db, 'books', borrowData.bookId);
+                                    const bookSnapshot = await getDoc(bookRef);
+                                    
+                                    let book;
+                                    if (bookSnapshot.exists()) {
+                                        book = { id: bookSnapshot.id, ...bookSnapshot.data() };
+                                    } else {
+                                        // Fallback: use data from borrow record
+                                        book = {
+                                            id: borrowData.bookId,
+                                            title: borrowData.bookTitle || 'Unknown Book',
+                                            author: 'Unknown Author',
+                                            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"
+                                        };
+                                    }
+
+                                    return {
+                                        id: doc.id,
+                                        ...borrowData,
+                                        book: book,
+                                        borrowDate: borrowData.borrowDate?.toDate ? borrowData.borrowDate.toDate().toISOString() : borrowData.borrowDate,
+                                        dueDate: borrowData.dueDate?.toDate ? borrowData.dueDate.toDate().toISOString() : borrowData.dueDate
+                                    };
+                                } catch (error) {
+                                    console.error('Error fetching book:', error);
+                                    // Return with minimal data
+                                    return {
+                                        id: doc.id,
+                                        ...borrowData,
+                                        book: {
+                                            id: borrowData.bookId,
+                                            title: borrowData.bookTitle || 'Unknown Book',
+                                            author: 'Unknown Author',
+                                            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"
+                                        },
+                                        borrowDate: borrowData.borrowDate?.toDate ? borrowData.borrowDate.toDate().toISOString() : borrowData.borrowDate,
+                                        dueDate: borrowData.dueDate?.toDate ? borrowData.dueDate.toDate().toISOString() : borrowData.dueDate
+                                    };
+                                }
+                            });
+
+                            const borrows = await Promise.all(borrowPromises);
+                            
+                            // Sort by borrowDate descending
+                            borrows.sort((a, b) => {
+                                const dateA = a.borrowDate ? new Date(a.borrowDate) : new Date(0);
+                                const dateB = b.borrowDate ? new Date(b.borrowDate) : new Date(0);
+                                return dateB - dateA;
+                            });
+                            
+                            setBorrowedBooks(borrows);
+                        },
+                        (error) => {
+                            console.error('Error listening to borrows:', error);
+                        }
+                    );
+                }
+            } catch (error) {
+                console.error('Error finding member:', error);
+            }
+        };
+
+        findMemberAndListenBorrows();
+
+        return () => {
+            if (borrowsUnsubscribe) borrowsUnsubscribe();
+        };
+    }, [userEmail]);
 
     // Close menu and search when clicking outside
     useEffect(() => {
@@ -46,6 +164,17 @@ const Home = () => {
             };
         }
     }, [isMenuOpen, isSearchOpen]);
+
+    const borrowedBook= {
+        user_uid: {
+            borrowing_id: {
+                bookid: "213",
+                title: "Atomic Habits",
+                borrowDate: "2023-10-27T10:00:00Z",
+                status: "borrowed"
+            }
+        }
+    }
 
     // Mock data for books
     const featuredBooks = [
@@ -103,24 +232,7 @@ const Home = () => {
         }
     ];
 
-    const borrowedBooks = [
-        {
-            id: 8,
-            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
-            title: "The 7 Habits of Highly Effective People",
-            author: "Stephen R. Covey",
-            genre: "Self-Development",
-            dueDate: "2024-01-15"
-        },
-        {
-            id: 9,
-            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
-            title: "Thinking, Fast and Slow",
-            author: "Daniel Kahneman",
-            genre: "Psychology",
-            dueDate: "2024-01-20"
-        }
-    ];
+    // borrowedBooks now comes from Firestore real-time listener
 
     const genres = [
         {
@@ -311,7 +423,7 @@ const Home = () => {
                             Selamat datang, {username} 👋
                         </h2>
                         
-                        {/* Book Carousel */}
+                        {/* Borrowed Books Section */}
                         <div className="relative">
                             <div 
                                 ref={carouselRef}
@@ -325,18 +437,36 @@ const Home = () => {
                                     }
                                 }}
                             >
-                                {featuredBooks.map((book, index) => (
-                                    <Book
-                                        key={book.id}
-                                        id={book.id}
-                                        coverSrc={book.coverSrc}
-                                        title={book.title}
-                                        author={book.author}
-                                        genre={book.genre}
-                                        className="snap-start text-white"
-                                        onClick={handleBookClick}
-                                    />
+                                {borrowedBooks.length > 0 ? (
+                            <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
+                                {borrowedBooks.map((borrow) => (
+                                    <div key={borrow.id} className="flex-shrink-0">
+                                        <Book
+                                            id={borrow.book?.id || borrow.bookId}
+                                            coverSrc={borrow.book?.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"}
+                                            title={borrow.book?.title || borrow.bookTitle || "Unknown Book"}
+                                            author={borrow.book?.author || "Unknown Author"}
+                                            genre={borrow.book?.genre || borrow.book?.category || "General"}
+                                            textColor="text-white"
+                                            className="snap-start"
+                                            onClick={handleBookClick}
+                                        />
+                                        <div className="mt-1 space-y-0.5">
+                                            <p className="text-xs sm:text-sm text-white">
+                                                Borrowed: {borrow.borrowDate ? new Date(borrow.borrowDate).toLocaleDateString() : 'N/A'}
+                                            </p>
+                                            <p className="text-xs sm:text-sm font-medium">
+                                                Due: {borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString() : 'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
                                 ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500 text-sm sm:text-base">No borrowed books at the moment.</p>
+                        )}
+
+
                                 {/* See All Button */}
                                 <div className="flex-shrink-0 flex flex-col items-center justify-center min-w-[147px] sm:min-w-[160px] snap-start">
                                     <button className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors mb-2">
@@ -445,21 +575,26 @@ const Home = () => {
                         
                         {borrowedBooks.length > 0 ? (
                             <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
-                                {borrowedBooks.map((book) => (
-                                    <div key={book.id} className="flex-shrink-0">
+                                {borrowedBooks.map((borrow) => (
+                                    <div key={borrow.id} className="flex-shrink-0">
                                         <Book
-                                            id={book.id}
-                                            coverSrc={book.coverSrc}
-                                            title={book.title}
-                                            author={book.author}
-                                            genre={book.genre}
+                                            id={borrow.book?.id || borrow.bookId}
+                                            coverSrc={borrow.book?.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"}
+                                            title={borrow.book?.title || borrow.bookTitle || "Unknown Book"}
+                                            author={borrow.book?.author || "Unknown Author"}
+                                            genre={borrow.book?.genre || borrow.book?.category || "General"}
                                             textColor="text-gray-900"
                                             className="snap-start"
                                             onClick={handleBookClick}
                                         />
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                                            Due: {new Date(book.dueDate).toLocaleDateString()}
-                                        </p>
+                                        <div className="mt-1 space-y-0.5">
+                                            <p className="text-xs sm:text-sm text-gray-600">
+                                                Borrowed: {borrow.borrowDate ? new Date(borrow.borrowDate).toLocaleDateString() : 'N/A'}
+                                            </p>
+                                            <p className="text-xs sm:text-sm font-medium text-red-600">
+                                                Due: {borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString() : 'N/A'}
+                                            </p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

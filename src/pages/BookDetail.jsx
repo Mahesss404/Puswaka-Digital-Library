@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, User, Tag, FileText, Package, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Buttons.jsx';
+import { db, auth } from '@/lib/firebase';
+import { doc, getDoc, collection, onSnapshot, addDoc, updateDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const BookDetail = () => {
   const { id } = useParams();
@@ -9,83 +12,133 @@ const BookDetail = () => {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState([]);
-  const [borrowRecords, setBorrowRecords] = useState([]);
+  const [userEmail, setUserEmail] = useState("");
+  const [memberId, setMemberId] = useState(null);
+  const [isUserBorrowed, setIsUserBorrowed] = useState(false);
+  const [userBorrowInfo, setUserBorrowInfo] = useState(null);
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [borrowForm, setBorrowForm] = useState({
     memberId: '',
     dueDate: ''
   });
 
+  // Get current user
   useEffect(() => {
-    loadBookData();
-    loadMembersAndRecords();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserEmail(user.email || "");
+      }
+    });
+    return () => unsubscribeAuth();
+  }, []);
+
+  // Find member by email
+  useEffect(() => {
+    if (!userEmail) return;
+
+    const findMember = async () => {
+      try {
+        const membersQuery = query(
+          collection(db, 'members'),
+          where('email', '==', userEmail)
+        );
+        const membersSnapshot = await getDocs(membersQuery);
+        
+        if (!membersSnapshot.empty) {
+          const memberDoc = membersSnapshot.docs[0];
+          setMemberId(memberDoc.id);
+        }
+      } catch (error) {
+        console.error('Error finding member:', error);
+      }
+    };
+
+    findMember();
+  }, [userEmail]);
+
+  // Load book data from Firestore
+  useEffect(() => {
+    const fetchBook = async () => {
+      try {
+        setLoading(true);
+        const bookDocRef = doc(db, 'books', id);
+        const bookDocSnap = await getDoc(bookDocRef);
+
+        if (bookDocSnap.exists()) {
+          const bookData = {
+            id: bookDocSnap.id,
+            ...bookDocSnap.data(),
+            coverSrc: bookDocSnap.data().coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"
+          };
+          setBook(bookData);
+        } else {
+          setBook(null);
+        }
+      } catch (error) {
+        console.error("Error loading book:", error);
+        setBook(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchBook();
+    }
   }, [id]);
 
-  const loadBookData = () => {
-    try {
-      // First, try to load from localStorage (admin books)
-      const booksData = localStorage.getItem('books');
-      if (booksData) {
-        const books = JSON.parse(booksData);
-        const foundBook = books.find(b => String(b.id) === String(id));
-        if (foundBook) {
-          setBook(foundBook);
-          setLoading(false);
-          return;
-        }
-      }
-      
-      // If not found in localStorage, check Home.jsx mock data
-      const mockBooks = [
-        { id: 1, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "Atomic Habits", author: "James Clear", genre: "Self-Development" },
-        { id: 2, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "Atomic Habits", author: "James Clear", genre: "Self-Development" },
-        { id: 3, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "Mindset: The New Psychology of Success", author: "Carol S. Dweck", genre: "Psychology" },
-        { id: 4, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "The Power of Habit", author: "Charles Duhigg", genre: "Self-Development" },
-        { id: 5, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "Atomic Habits", author: "James Clear", genre: "Self-Development" },
-        { id: 6, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "Mindset: The New Psychology of Success", author: "Carol S. Dweck", genre: "Psychology" },
-        { id: 7, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "Deep Work: Rules for Focused Success", author: "Cal Newport", genre: "Productivity" },
-        { id: 8, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "The 7 Habits of Highly Effective People", author: "Stephen R. Covey", genre: "Self-Development" },
-        { id: 9, coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg", title: "Thinking, Fast and Slow", author: "Daniel Kahneman", genre: "Psychology" }
-      ];
-      
-      // Match by string or number ID
-      const foundMockBook = mockBooks.find(b => String(b.id) === String(id));
-      if (foundMockBook) {
-        // Convert mock book to full book format with defaults
-        setBook({
-          ...foundMockBook,
-          category: foundMockBook.genre,
-          description: `This is a great book about ${foundMockBook.genre}. ${foundMockBook.title} by ${foundMockBook.author} offers valuable insights and practical advice.`,
-          available: 5,
-          quantity: 10,
-          isbn: ''
-        });
-      } else {
-        setBook(null);
-      }
-    } catch (error) {
-      console.error('Error loading book:', error);
-      setBook(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Check if user has borrowed this book
+  useEffect(() => {
+    if (!memberId || !id) return;
 
-  const loadMembersAndRecords = () => {
-    try {
-      const membersData = localStorage.getItem('members');
-      const borrowData = localStorage.getItem('borrow_records');
-      
-      if (membersData) {
-        setMembers(JSON.parse(membersData));
+    const checkUserBorrow = async () => {
+      try {
+        const borrowsQuery = query(
+          collection(db, 'borrows'),
+          where('memberId', '==', memberId),
+          where('bookId', '==', id),
+          where('status', '==', 'borrowed')
+        );
+        const borrowsSnapshot = await getDocs(borrowsQuery);
+        
+        if (!borrowsSnapshot.empty) {
+          const borrowDoc = borrowsSnapshot.docs[0];
+          const borrowData = borrowDoc.data();
+          setIsUserBorrowed(true);
+          setUserBorrowInfo({
+            borrowDate: borrowData.borrowDate?.toDate ? borrowData.borrowDate.toDate().toISOString() : borrowData.borrowDate,
+            dueDate: borrowData.dueDate?.toDate ? borrowData.dueDate.toDate().toISOString() : borrowData.dueDate
+          });
+        } else {
+          setIsUserBorrowed(false);
+          setUserBorrowInfo(null);
+        }
+      } catch (error) {
+        console.error('Error checking user borrow:', error);
       }
-      if (borrowData) {
-        setBorrowRecords(JSON.parse(borrowData));
+    };
+
+    checkUserBorrow();
+  }, [memberId, id]);
+
+  // Load members from Firestore
+  useEffect(() => {
+    const membersUnsubscribe = onSnapshot(
+      collection(db, 'members'),
+      (snapshot) => {
+        const membersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMembers(membersData);
+      },
+      (error) => {
+        console.error('Error listening to members:', error);
       }
-    } catch (error) {
-      console.error('Error loading members/records:', error);
-    }
-  };
+    );
+
+    return () => membersUnsubscribe();
+  }, []);
 
   const handleBorrow = async () => {
     if (!borrowForm.memberId || !borrowForm.dueDate) {
@@ -93,61 +146,79 @@ const BookDetail = () => {
       return;
     }
 
-    if (book.available <= 0) {
+    if (!book || book.available <= 0) {
       alert('Book is not available');
       return;
     }
 
-    const member = members.find(m => m.id === borrowForm.memberId);
-    
-    if (!member) {
-      alert('Member not found');
-      return;
-    }
-
     try {
-      // Get current books data
-      const booksData = localStorage.getItem('books');
-      const books = booksData ? JSON.parse(booksData) : [];
-      
+      // Get latest book data from Firestore
+      const bookDoc = await getDoc(doc(db, 'books', book.id));
+      if (!bookDoc.exists()) {
+        alert('Book not found');
+        return;
+      }
+      const latestBook = { id: bookDoc.id, ...bookDoc.data() };
+
+      // Get member data
+      const memberDoc = await getDoc(doc(db, 'members', borrowForm.memberId));
+      if (!memberDoc.exists()) {
+        alert('Member not found');
+        return;
+      }
+      const member = { id: memberDoc.id, ...memberDoc.data() };
+
+      // Validate book availability
+      if (latestBook.available <= 0) {
+        alert('Book is not available');
+        return;
+      }
+
+      // Check if member already borrowed this book
+      const activeBorrowsQuery = query(
+        collection(db, 'borrows'),
+        where('memberId', '==', borrowForm.memberId),
+        where('bookId', '==', book.id),
+        where('status', '==', 'borrowed')
+      );
+      const activeBorrowsSnapshot = await getDocs(activeBorrowsQuery);
+      if (!activeBorrowsSnapshot.empty) {
+        alert('Member already has an active borrow for this book');
+        return;
+      }
+
       // Create borrow record
-      const newRecord = {
-        id: Date.now().toString(),
+      const dueDateTimestamp = Timestamp.fromDate(new Date(borrowForm.dueDate));
+      const newBorrow = {
         bookId: book.id,
-        bookTitle: book.title,
+        bookTitle: latestBook.title,
+        bookISBN: latestBook.isbn,
         memberId: borrowForm.memberId,
         memberName: member.name,
-        borrowDate: new Date().toISOString(),
-        dueDate: borrowForm.dueDate,
+        memberEmail: member.email,
+        borrowDate: serverTimestamp(),
+        dueDate: dueDateTimestamp,
         status: 'borrowed',
         returnDate: null
       };
+      
+      await addDoc(collection(db, 'borrows'), newBorrow);
 
       // Update book availability
-      const updatedBooks = books.map(b =>
-        b.id === book.id ? { ...b, available: b.available - 1 } : b
-      );
+      await updateDoc(doc(db, 'books', book.id), {
+        available: latestBook.available - 1
+      });
 
       // Update member borrowed count
-      const membersData = localStorage.getItem('members');
-      const membersList = membersData ? JSON.parse(membersData) : [];
-      const updatedMembers = membersList.map(m =>
-        m.id === borrowForm.memberId ? { ...m, borrowedBooks: m.borrowedBooks + 1 } : m
-      );
-
-      // Get current borrow records
-      const borrowData = localStorage.getItem('borrow_records');
-      const currentRecords = borrowData ? JSON.parse(borrowData) : [];
-
-      // Save all updates
-      localStorage.setItem('books', JSON.stringify(updatedBooks));
-      localStorage.setItem('members', JSON.stringify(updatedMembers));
-      localStorage.setItem('borrow_records', JSON.stringify([...currentRecords, newRecord]));
+      await updateDoc(doc(db, 'members', borrowForm.memberId), {
+        borrowedBooks: (member.borrowedBooks || 0) + 1
+      });
 
       // Update local state
       setBook({ ...book, available: book.available - 1 });
       setShowBorrowModal(false);
       setBorrowForm({ memberId: '', dueDate: '' });
+      setIsUserBorrowed(true);
       alert('✓ Book borrowed successfully!');
     } catch (error) {
       console.error('Error borrowing book:', error);
@@ -272,17 +343,36 @@ const BookDetail = () => {
                 </p>
               </div>
 
+              {/* User Borrow Status */}
+              {isUserBorrowed && userBorrowInfo && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="font-semibold text-blue-900 mb-2">Your Borrow Status</h3>
+                  <div className="space-y-1 text-sm text-blue-800">
+                    <p>Borrowed: {userBorrowInfo.borrowDate ? new Date(userBorrowInfo.borrowDate).toLocaleDateString() : 'N/A'}</p>
+                    <p className="font-medium">
+                      Due Date: {userBorrowInfo.dueDate ? new Date(userBorrowInfo.dueDate).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Borrow Button */}
               <div className="mt-8 pt-6 border-t border-gray-200">
-                <Button
-                  onClick={() => setShowBorrowModal(true)}
-                  disabled={!book.available || book.available === 0}
-                  className="w-full sm:w-auto px-8 py-3 text-lg text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  size="lg"
-                >
-                  <Calendar className="w-5 h-5" />
-                  {book.available > 0 ? 'Borrow This Book' : 'Not Available'}
-                </Button>
+                {isUserBorrowed ? (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800 font-semibold">✓ You have borrowed this book</p>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => setShowBorrowModal(true)}
+                    disabled={!book.available || book.available === 0}
+                    className="w-full sm:w-auto px-8 py-3 text-lg text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    size="lg"
+                  >
+                    <Calendar className="w-5 h-5" />
+                    {book.available > 0 ? 'Borrow This Book' : 'Not Available'}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

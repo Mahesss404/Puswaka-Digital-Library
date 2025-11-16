@@ -17,7 +17,7 @@ import React from 'react';
  * - isbn: ISBN number (optional)
  */
 const Book = ({ 
-  coverSrc, 
+  coverSrc = '', 
   title, 
   author = '', 
   genre = '', 
