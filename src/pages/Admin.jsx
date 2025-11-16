@@ -1,6 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BookOpen, Users, Plus, Search, Clock, CheckCircle, XCircle, Calendar, AlertCircle, Camera, Upload, X } from 'lucide-react';
+import { BookOpen, Users, Plus, Search, Clock, CheckCircle, XCircle, Calendar, AlertCircle, Camera, Upload, X, CreditCard, ScanLine } from 'lucide-react';
 import { BrowserMultiFormatReader } from '@zxing/library';
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  doc, 
+  getDocs, 
+  query, 
+  where, 
+  onSnapshot,
+  serverTimestamp,
+  getDoc,
+  Timestamp
+} from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
 
 const BookBorrowSystem = () => {
   const [activeTab, setActiveTab] = useState('books');
@@ -17,6 +31,8 @@ const BookBorrowSystem = () => {
     title: '',
     author: '',
     isbn: '',
+    coverSrc: '',
+    description: '',
     category: '',
     quantity: 1
   });
@@ -39,41 +55,76 @@ const BookBorrowSystem = () => {
   const [borrowForm, setBorrowForm] = useState({
     bookId: '',
     memberId: '',
-    dueDate: ''
+    dueDate: '',
+    memberIdInput: '',
+    bookIdInput: ''
   });
+  const [scanningMemberId, setScanningMemberId] = useState(false);
+  const [scanningBookId, setScanningBookId] = useState(false);
+  const [memberScanError, setMemberScanError] = useState('');
+  const [bookScanError, setBookScanError] = useState('');
+  const videoRefMember = useRef(null);
+  const videoRefBook = useRef(null);
 
+  // Real-time listeners for Firestore
   useEffect(() => {
-    loadData();
+    // Listen to books collection
+    const booksUnsubscribe = onSnapshot(
+      collection(db, 'books'),
+      (snapshot) => {
+        const booksData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setBooks(booksData);
+      },
+      (error) => {
+        console.error('Error listening to books:', error);
+      }
+    );
+
+    // Listen to members collection
+    const membersUnsubscribe = onSnapshot(
+      collection(db, 'members'),
+      (snapshot) => {
+        const membersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setMembers(membersData);
+      },
+      (error) => {
+        console.error('Error listening to members:', error);
+      }
+    );
+
+    // Listen to borrows collection
+    const borrowsUnsubscribe = onSnapshot(
+      collection(db, 'borrows'),
+      (snapshot) => {
+        const borrowsData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            borrowDate: data.borrowDate?.toDate ? data.borrowDate.toDate().toISOString() : data.borrowDate,
+            dueDate: data.dueDate?.toDate ? data.dueDate.toDate().toISOString() : data.dueDate,
+            returnDate: data.returnDate?.toDate ? data.returnDate.toDate().toISOString() : data.returnDate
+          };
+        });
+        setBorrowRecords(borrowsData);
+      },
+      (error) => {
+        console.error('Error listening to borrows:', error);
+      }
+    );
+
+    return () => {
+      booksUnsubscribe();
+      membersUnsubscribe();
+      borrowsUnsubscribe();
+    };
   }, []);
-
-  const loadData = async () => {
-    try {
-      const booksData = await localStorage.getItem('books');
-      const membersData = await localStorage.getItem('members');
-      const borrowData = await localStorage.getItem('borrow_records');
-      
-      if (booksData) setBooks(JSON.parse(booksData.value));
-      if (membersData) setMembers(JSON.parse(membersData.value));
-      if (borrowData) setBorrowRecords(JSON.parse(borrowData.value));
-    } catch (error) {
-      console.log('No existing data, starting fresh');
-    }
-  };
-
-  const saveBooks = async (data) => {
-    await localStorage.setItem('books', JSON.stringify(data));
-    setBooks(data);
-  };
-
-  const saveMembers = async (data) => {
-    await localStorage.setItem('members', JSON.stringify(data));
-    setMembers(data);
-  };
-
-  const saveBorrowRecords = async (data) => {
-    await localStorage.setItem('borrow_records', JSON.stringify(data));
-    setBorrowRecords(data);
-  };
 
   const fetchBookByISBN = async (isbn) => {
     setIsLoadingBook(true);
@@ -293,21 +344,31 @@ const BookBorrowSystem = () => {
   }, [showBarcodeScanner]);
 
   const handleAddBook = async () => {
-    if (!bookForm.title || !bookForm.author || !bookForm.isbn) {
+    if (!bookForm.title || !bookForm.author || !bookForm.isbn || !bookForm.category || !bookForm.quantity || !bookForm.description) {
       alert('Please fill in all required fields');
       return;
     }
     
-    const newBook = {
-      id: Date.now().toString(),
-      ...bookForm,
-      quantity: parseInt(bookForm.quantity),
-      available: parseInt(bookForm.quantity),
-      createdAt: new Date().toISOString()
-    };
-    await saveBooks([...books, newBook]);
-    setBookForm({ title: '', author: '', isbn: '', category: '', quantity: 1 });
-    setShowAddBook(false);
+    try {
+      const newBook = {
+        ...bookForm,
+        quantity: parseInt(bookForm.quantity),
+        available: parseInt(bookForm.quantity),
+        createdAt: serverTimestamp()
+      };
+      await addDoc(collection(db, 'books'), newBook);
+      setBookForm({ title: '', author: '', isbn: '', description: '', coverSrc: '', category: '', quantity: 1 });
+      // Reset file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      setShowAddBook(false);
+      alert('Book added successfully!');
+    } catch (error) {
+      console.error('Error adding book:', error);
+      alert('Failed to add book. Please try again.');
+    }
   };
 
   const handleAddMember = async () => {
@@ -316,78 +377,237 @@ const BookBorrowSystem = () => {
       return;
     }
     
-    const newMember = {
-      id: Date.now().toString(),
-      ...memberForm,
-      borrowedBooks: 0,
-      joinedAt: new Date().toISOString()
+    try {
+      // Check if membership ID already exists
+      const existingMemberQuery = query(
+        collection(db, 'members'),
+        where('membershipId', '==', memberForm.membershipId)
+      );
+      const existingMemberSnapshot = await getDocs(existingMemberQuery);
+      
+      if (!existingMemberSnapshot.empty) {
+        alert('Membership ID already exists. Please use a different ID.');
+        return;
+      }
+      
+      const newMember = {
+        ...memberForm,
+        borrowedBooks: 0,
+        joinedAt: serverTimestamp()
+      };
+      await addDoc(collection(db, 'members'), newMember);
+      setMemberForm({ name: '', email: '', phone: '', membershipId: '' });
+      setShowAddMember(false);
+      alert('Member added successfully!');
+    } catch (error) {
+      console.error('Error adding member:', error);
+      alert('Failed to add member. Please try again.');
+    }
+  };
+
+  // Function to find member by membershipId
+  const findMemberByMembershipId = async (membershipId) => {
+    const memberQuery = query(
+      collection(db, 'members'),
+      where('membershipId', '==', membershipId)
+    );
+    const memberSnapshot = await getDocs(memberQuery);
+    
+    if (memberSnapshot.empty) {
+      return null;
+    }
+    
+    const memberDoc = memberSnapshot.docs[0];
+    return {
+      id: memberDoc.id,
+      ...memberDoc.data()
     };
-    await saveMembers([...members, newMember]);
-    setMemberForm({ name: '', email: '', phone: '', membershipId: '' });
-    setShowAddMember(false);
+  };
+
+  // Function to find book by ISBN or ID
+  const findBookByIdOrISBN = async (bookIdOrISBN) => {
+    // Try to find by ID first
+    const bookDoc = await getDoc(doc(db, 'books', bookIdOrISBN));
+    if (bookDoc.exists()) {
+      return {
+        id: bookDoc.id,
+        ...bookDoc.data()
+      };
+    }
+    
+    // Try to find by ISBN
+    const bookQuery = query(
+      collection(db, 'books'),
+      where('isbn', '==', bookIdOrISBN)
+    );
+    const bookSnapshot = await getDocs(bookQuery);
+    
+    if (bookSnapshot.empty) {
+      return null;
+    }
+    
+    const bookDoc2 = bookSnapshot.docs[0];
+    return {
+      id: bookDoc2.id,
+      ...bookDoc2.data()
+    };
+  };
+
+  // Handle member ID input (scan or manual)
+  const handleMemberIdInput = async (memberId) => {
+    setMemberScanError('');
+    if (!memberId.trim()) {
+      setMemberScanError('Please enter a member ID');
+      return;
+    }
+
+    const member = await findMemberByMembershipId(memberId.trim());
+    if (!member) {
+      setMemberScanError('Member not found with this ID');
+      return;
+    }
+
+    setBorrowForm({ ...borrowForm, memberId: member.id, memberIdInput: memberId.trim() });
+    alert(`✓ Member found: ${member.name}`);
+  };
+
+  // Handle book ID input (scan or manual)
+  const handleBookIdInput = async (bookIdOrISBN) => {
+    setBookScanError('');
+    if (!bookIdOrISBN.trim()) {
+      setBookScanError('Please enter a book ID or ISBN');
+      return;
+    }
+
+    const book = await findBookByIdOrISBN(bookIdOrISBN.trim());
+    if (!book) {
+      setBookScanError('Book not found with this ID/ISBN');
+      return;
+    }
+
+    setBorrowForm({ ...borrowForm, bookId: book.id, bookIdInput: bookIdOrISBN.trim() });
+    setSelectedBook(book);
+    alert(`✓ Book found: ${book.title}`);
   };
 
   const handleBorrowBook = async () => {
-    if (!borrowForm.memberId || !borrowForm.dueDate) {
-      alert('Please select a member and due date');
+    if (!borrowForm.memberId || !borrowForm.bookId || !borrowForm.dueDate) {
+      alert('Please scan/enter member ID, book ID, and select due date');
       return;
     }
     
-    const book = books.find(b => b.id === borrowForm.bookId);
-    const member = members.find(m => m.id === borrowForm.memberId);
-    
-    if (book.available <= 0) {
-      alert('Book is not available');
-      return;
+    try {
+      // Get latest book data from Firestore
+      const bookDoc = await getDoc(doc(db, 'books', borrowForm.bookId));
+      if (!bookDoc.exists()) {
+        alert('Book not found');
+        return;
+      }
+      const book = { id: bookDoc.id, ...bookDoc.data() };
+
+      // Get latest member data from Firestore
+      const memberDoc = await getDoc(doc(db, 'members', borrowForm.memberId));
+      if (!memberDoc.exists()) {
+        alert('Member not found');
+        return;
+      }
+      const member = { id: memberDoc.id, ...memberDoc.data() };
+
+      // Validate book availability
+      if (book.available <= 0) {
+        alert('Book is not available');
+        return;
+      }
+
+      // Check if member already borrowed this book
+      const activeBorrowsQuery = query(
+        collection(db, 'borrows'),
+        where('memberId', '==', borrowForm.memberId),
+        where('bookId', '==', borrowForm.bookId),
+        where('status', '==', 'borrowed')
+      );
+      const activeBorrowsSnapshot = await getDocs(activeBorrowsQuery);
+      if (!activeBorrowsSnapshot.empty) {
+        alert('Member already has an active borrow for this book');
+        return;
+      }
+
+      // Create borrow record
+      const dueDateTimestamp = Timestamp.fromDate(new Date(borrowForm.dueDate));
+      const newBorrow = {
+        bookId: borrowForm.bookId,
+        bookTitle: book.title,
+        bookISBN: book.isbn,
+        memberId: borrowForm.memberId,
+        memberName: member.name,
+        memberEmail: member.email,
+        borrowDate: serverTimestamp(),
+        dueDate: dueDateTimestamp,
+        status: 'borrowed',
+        returnDate: null
+      };
+      
+      await addDoc(collection(db, 'borrows'), newBorrow);
+
+      // Update book availability
+      await updateDoc(doc(db, 'books', borrowForm.bookId), {
+        available: book.available - 1
+      });
+
+      // Update member borrowed count
+      await updateDoc(doc(db, 'members', borrowForm.memberId), {
+        borrowedBooks: (member.borrowedBooks || 0) + 1
+      });
+      
+      setBorrowForm({ bookId: '', memberId: '', dueDate: '', memberIdInput: '', bookIdInput: '' });
+      setShowBorrowModal(false);
+      setSelectedBook(null);
+      setMemberScanError('');
+      setBookScanError('');
+      alert('✓ Book borrowed successfully!');
+    } catch (error) {
+      console.error('Error borrowing book:', error);
+      alert('Failed to process borrow. Please try again.');
     }
-    
-    const newRecord = {
-      id: Date.now().toString(),
-      bookId: borrowForm.bookId,
-      bookTitle: book.title,
-      memberId: borrowForm.memberId,
-      memberName: member.name,
-      borrowDate: new Date().toISOString(),
-      dueDate: borrowForm.dueDate,
-      status: 'borrowed',
-      returnDate: null
-    };
-    
-    const updatedBooks = books.map(b => 
-      b.id === borrowForm.bookId ? { ...b, available: b.available - 1 } : b
-    );
-    
-    const updatedMembers = members.map(m =>
-      m.id === borrowForm.memberId ? { ...m, borrowedBooks: m.borrowedBooks + 1 } : m
-    );
-    
-    await saveBooks(updatedBooks);
-    await saveMembers(updatedMembers);
-    await saveBorrowRecords([...borrowRecords, newRecord]);
-    
-    setBorrowForm({ bookId: '', memberId: '', dueDate: '' });
-    setShowBorrowModal(false);
-    setSelectedBook(null);
   };
 
   const returnBook = async (recordId) => {
-    const record = borrowRecords.find(r => r.id === recordId);
-    
-    const updatedRecords = borrowRecords.map(r =>
-      r.id === recordId ? { ...r, status: 'returned', returnDate: new Date().toISOString() } : r
-    );
-    
-    const updatedBooks = books.map(b =>
-      b.id === record.bookId ? { ...b, available: b.available + 1 } : b
-    );
-    
-    const updatedMembers = members.map(m =>
-      m.id === record.memberId ? { ...m, borrowedBooks: Math.max(0, m.borrowedBooks - 1) } : m
-    );
-    
-    await saveBooks(updatedBooks);
-    await saveMembers(updatedMembers);
-    await saveBorrowRecords(updatedRecords);
+    try {
+      const record = borrowRecords.find(r => r.id === recordId);
+      if (!record) {
+        alert('Borrow record not found');
+        return;
+      }
+
+      // Update borrow record
+      await updateDoc(doc(db, 'borrows', recordId), {
+        status: 'returned',
+        returnDate: serverTimestamp()
+      });
+
+      // Get latest book data and update availability
+      const bookDoc = await getDoc(doc(db, 'books', record.bookId));
+      if (bookDoc.exists()) {
+        const book = bookDoc.data();
+        await updateDoc(doc(db, 'books', record.bookId), {
+          available: (book.available || 0) + 1
+        });
+      }
+
+      // Get latest member data and update borrowed count
+      const memberDoc = await getDoc(doc(db, 'members', record.memberId));
+      if (memberDoc.exists()) {
+        const member = memberDoc.data();
+        await updateDoc(doc(db, 'members', record.memberId), {
+          borrowedBooks: Math.max(0, (member.borrowedBooks || 0) - 1)
+        });
+      }
+
+      alert('✓ Book returned successfully!');
+    } catch (error) {
+      console.error('Error returning book:', error);
+      alert('Failed to return book. Please try again.');
+    }
   };
 
   const isOverdue = (dueDate) => {
@@ -404,6 +624,13 @@ const BookBorrowSystem = () => {
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.membershipId.includes(searchTerm)
+  );
+
+  const filteredBorrows = borrowRecords.filter(borrow =>
+    borrow.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    borrow.memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    borrow.memberEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    borrow.bookISBN.includes(searchTerm)
   );
 
   const activeBorrows = borrowRecords.filter(r => r.status === 'borrowed');
@@ -572,7 +799,7 @@ const BookBorrowSystem = () => {
 
             {activeTab === 'borrows' && (
               <div className="space-y-3">
-                {borrowRecords.map(record => (
+                {filteredBorrows.map(record => (
                   <div key={record.id} className={`border rounded-lg p-4 ${
                     record.status === 'returned'
                       ? 'bg-gray-50 border-gray-300'
@@ -726,6 +953,7 @@ const BookBorrowSystem = () => {
               </div>
 
               <div className="space-y-4">
+                
                 <input
                   type="text"
                   placeholder="Book Title"
@@ -740,6 +968,52 @@ const BookBorrowSystem = () => {
                   onChange={(e) => setBookForm({ ...bookForm, author: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cover Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        // Check file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                          alert('File size too large. Please select an image smaller than 5MB.');
+                          return;
+                        }
+                        
+                        // Check file type
+                        if (!file.type.startsWith('image/')) {
+                          alert('Please select a valid image file.');
+                          return;
+                        }
+                        
+                        // Convert to base64
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setBookForm({ ...bookForm, coverSrc: reader.result });
+                        };
+                        reader.onerror = () => {
+                          alert('Error reading file. Please try again.');
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {bookForm.coverSrc && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-600 mb-2">Preview:</p>
+                      <img
+                        src={bookForm.coverSrc}
+                        alt="Cover preview"
+                        className="w-32 h-48 object-cover rounded border border-gray-300"
+                      />
+                    </div>
+                  )}
+                </div>
                 <input
                   type="text"
                   placeholder="ISBN"
@@ -747,6 +1021,12 @@ const BookBorrowSystem = () => {
                   onChange={(e) => setBookForm({ ...bookForm, isbn: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
+                <textarea
+                  placeholder="Description"
+                  value={bookForm.description}
+                  onChange={(e) => setBookForm({ ...bookForm, description: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                ></textarea>
                 <input
                   type="text"
                   placeholder="Category"
@@ -773,7 +1053,12 @@ const BookBorrowSystem = () => {
                     onClick={() => {
                       setShowAddBook(false);
                       setIsbnInput('');
-                      setBookForm({ title: '', author: '', isbn: '', category: '', quantity: 1 });
+                      setBookForm({ title: '', author: '', isbn: '', description: '', coverSrc: '', category: '', quantity: 1 });
+                      // Reset file input
+                      const fileInput = document.querySelector('input[type="file"]');
+                      if (fileInput) {
+                        fileInput.value = '';
+                      }
                       setShowBarcodeScanner(false);
                       stopBarcodeScan();
                     }}
@@ -841,38 +1126,95 @@ const BookBorrowSystem = () => {
 
         {showBorrowModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <h2 className="text-2xl font-bold mb-4">Borrow Book</h2>
-              {selectedBook && (
-                <div className="bg-indigo-50 p-3 rounded-lg mb-4">
-                  <p className="font-semibold">{selectedBook.title}</p>
-                  <p className="text-sm text-gray-600">by {selectedBook.author}</p>
+              
+              {/* Member ID Input Section */}
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Member ID / Kartu Member
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    placeholder="Enter or scan Member ID"
+                    value={borrowForm.memberIdInput}
+                    onChange={(e) => setBorrowForm({ ...borrowForm, memberIdInput: e.target.value })}
+                    onKeyPress={(e) => e.key === 'Enter' && handleMemberIdInput(borrowForm.memberIdInput)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={() => handleMemberIdInput(borrowForm.memberIdInput)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Verify
+                  </button>
                 </div>
-              )}
+                {memberScanError && (
+                  <p className="text-xs text-red-600 mt-1">{memberScanError}</p>
+                )}
+                {borrowForm.memberId && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Member verified: {members.find(m => m.id === borrowForm.memberId)?.name}
+                  </p>
+                )}
+              </div>
+
+              {/* Book ID Input Section */}
+              <div className="mb-4 p-4 bg-green-50 rounded-lg">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Book ID / ISBN / Barcode Buku
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    placeholder="Enter or scan Book ID/ISBN"
+                    value={borrowForm.bookIdInput}
+                    onChange={(e) => setBorrowForm({ ...borrowForm, bookIdInput: e.target.value })}
+                    onKeyPress={(e) => e.key === 'Enter' && handleBookIdInput(borrowForm.bookIdInput)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={() => handleBookIdInput(borrowForm.bookIdInput)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                  >
+                    <ScanLine className="w-4 h-4" />
+                    Verify
+                  </button>
+                </div>
+                {bookScanError && (
+                  <p className="text-xs text-red-600 mt-1">{bookScanError}</p>
+                )}
+                {selectedBook && (
+                  <div className="mt-2 p-2 bg-white rounded border border-green-300">
+                    <p className="text-sm font-semibold text-gray-800">{selectedBook.title}</p>
+                    <p className="text-xs text-gray-600">by {selectedBook.author}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Available: {selectedBook.available}/{selectedBook.quantity}
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-4">
-                <select
-                  value={borrowForm.memberId}
-                  onChange={(e) => setBorrowForm({ ...borrowForm, memberId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Select Member</option>
-                  {members.map(member => (
-                    <option key={member.id} value={member.id}>
-                      {member.name} ({member.membershipId})
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="date"
-                  value={borrowForm.dueDate}
-                  onChange={(e) => setBorrowForm({ ...borrowForm, dueDate: e.target.value })}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={borrowForm.dueDate}
+                    onChange={(e) => setBorrowForm({ ...borrowForm, dueDate: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
                 <div className="flex gap-3">
                   <button
                     onClick={handleBorrowBook}
-                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    disabled={!borrowForm.memberId || !borrowForm.bookId || !borrowForm.dueDate}
+                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     Confirm Borrow
                   </button>
@@ -880,6 +1222,9 @@ const BookBorrowSystem = () => {
                     onClick={() => {
                       setShowBorrowModal(false);
                       setSelectedBook(null);
+                      setBorrowForm({ bookId: '', memberId: '', dueDate: '', memberIdInput: '', bookIdInput: '' });
+                      setMemberScanError('');
+                      setBookScanError('');
                     }}
                     className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
                   >
