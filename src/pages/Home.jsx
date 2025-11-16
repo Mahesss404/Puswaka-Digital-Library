@@ -461,19 +461,21 @@ const Home = () => {
                                         </div>
                                     </div>
                                 ))}
+
+                                {/* See All Button */}
+                                <div className="flex-shrink-0 flex flex-col items-center justify-center sm:min-w-[24px] snap-start right-0">
+                                    <button className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors mb-2">
+                                        <ChevronRight className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                                    </button>
+                                    <p className="text-sm sm:text-base text-white font-medium">See all</p>
+                                </div>
                             </div>
                         ) : (
                             <p className="text-gray-500 text-sm sm:text-base">No borrowed books at the moment.</p>
                         )}
 
 
-                                {/* See All Button */}
-                                <div className="flex-shrink-0 flex flex-col items-center justify-center min-w-[147px] sm:min-w-[160px] snap-start">
-                                    <button className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors mb-2">
-                                        <ChevronRight className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                                    </button>
-                                    <p className="text-sm sm:text-base text-white font-medium">See all</p>
-                                </div>
+                                
                             </div>
                             
                             {/* Carousel Indicators */}
