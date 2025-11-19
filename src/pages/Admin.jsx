@@ -5,6 +5,7 @@ import {
   collection, 
   addDoc, 
   updateDoc, 
+  deleteDoc,
   doc, 
   getDocs, 
   query, 
@@ -14,7 +15,7 @@ import {
   getDoc,
   Timestamp
 } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 
 const BookBorrowSystem = () => {
   const [activeTab, setActiveTab] = useState('books');
@@ -23,6 +24,8 @@ const BookBorrowSystem = () => {
   const [borrowRecords, setBorrowRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddBook, setShowAddBook] = useState(false);
+  const [showEditBook, setShowEditBook] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
@@ -44,7 +47,7 @@ const BookBorrowSystem = () => {
   const [scanError, setScanError] = useState('');
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
-  
+
   const [memberForm, setMemberForm] = useState({
     name: '',
     email: '',
@@ -59,12 +62,12 @@ const BookBorrowSystem = () => {
     memberIdInput: '',
     bookIdInput: ''
   });
-  const [scanningMemberId, setScanningMemberId] = useState(false);
-  const [scanningBookId, setScanningBookId] = useState(false);
+  // const [scanningMemberId, setScanningMemberId] = useState(false);
+  // const [scanningBookId, setScanningBookId] = useState(false);
   const [memberScanError, setMemberScanError] = useState('');
   const [bookScanError, setBookScanError] = useState('');
-  const videoRefMember = useRef(null);
-  const videoRefBook = useRef(null);
+  // const videoRefMember = useRef(null);
+  // const videoRefBook = useRef(null);
 
   // Real-time listeners for Firestore
   useEffect(() => {
@@ -132,38 +135,37 @@ const BookBorrowSystem = () => {
       // Clean ISBN (remove dashes and spaces)
       const cleanISBN = isbn.replace(/[-\s]/g, '');
       
-      // Use Open Library ISBN API
-      const response = await fetch(`https://openlibrary.org/isbn/${cleanISBN}.json`);
+      // Use Google Books API
+      const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanISBN}`);
       
       if (!response.ok) {
+        throw new Error('Failed to fetch book data');
+      }
+      
+      const data = await response.json();
+      
+      // Check if book was found
+      if (!data.items || data.items.length === 0) {
         throw new Error('Book not found');
       }
       
-      const bookData = await response.json();
+      const bookData = data.items[0].volumeInfo;
       
-      // Fetch additional details from works API if available
-      let title = bookData.title || '';
-      let authors = '';
-      let categories = '';
+      // Extract book information
+      const title = bookData.title || '';
+      const authors = bookData.authors ? bookData.authors.join(', ') : '';
+      const categories = bookData.categories ? bookData.categories.slice(0, 3).join(', ') : '';
+      const description = bookData.description || '';
+      const coverImage = bookData.imageLinks?.thumbnail || 
+                        bookData.imageLinks?.smallThumbnail || 
+                        bookData.imageLinks?.medium ||
+                        '';
       
-      // Get author names
-      if (bookData.authors && bookData.authors.length > 0) {
-        const authorPromises = bookData.authors.map(async (author) => {
-          try {
-            const authorResponse = await fetch(`https://openlibrary.org${author.key}.json`);
-            const authorData = await authorResponse.json();
-            return authorData.name;
-          } catch {
-            return '';
-          }
-        });
-        const authorNames = await Promise.all(authorPromises);
-        authors = authorNames.filter(name => name).join(', ');
-      }
-      
-      // Get subjects/categories
-      if (bookData.subjects && bookData.subjects.length > 0) {
-        categories = bookData.subjects.slice(0, 3).join(', ');
+      // Convert thumbnail to larger image if available
+      let coverSrc = '';
+      if (coverImage) {
+        // Replace thumbnail size with larger size
+        coverSrc = coverImage.replace('zoom=1', 'zoom=3').replace('&edge=curl', '');
       }
       
       setBookForm({
@@ -171,6 +173,8 @@ const BookBorrowSystem = () => {
         author: authors,
         isbn: cleanISBN,
         category: categories,
+        description: description,
+        coverSrc: coverSrc,
         quantity: 1
       });
       setIsbnInput('');
@@ -185,6 +189,8 @@ const BookBorrowSystem = () => {
         author: '',
         isbn: isbn.replace(/[-\s]/g, ''),
         category: '',
+        description: '',
+        coverSrc: '',
         quantity: 1
       });
       setIsbnInput('');
@@ -368,6 +374,120 @@ const BookBorrowSystem = () => {
     } catch (error) {
       console.error('Error adding book:', error);
       alert('Failed to add book. Please try again.');
+    }
+  };
+
+  const handleEditBook = (book) => {
+    setEditingBook(book);
+    setBookForm({
+      title: book.title || '',
+      author: book.author || '',
+      isbn: book.isbn || '',
+      coverSrc: book.coverSrc || '',
+      description: book.description || '',
+      category: book.category || '',
+      quantity: book.quantity || 1
+    });
+    setShowEditBook(true);
+  };
+
+  const handleUpdateBook = async () => {
+    if (!bookForm.title || !bookForm.author || !bookForm.isbn || !bookForm.category || !bookForm.quantity || !bookForm.description) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    if (!editingBook) {
+      alert('No book selected for editing');
+      return;
+    }
+
+    try {
+      const bookRef = doc(db, 'books', editingBook.id);
+      const currentBook = books.find(b => b.id === editingBook.id);
+      
+      // Calculate new available count based on quantity change
+      const oldQuantity = currentBook?.quantity || editingBook.quantity;
+      const newQuantity = parseInt(bookForm.quantity);
+      const oldAvailable = currentBook?.available || editingBook.available;
+      const quantityDiff = newQuantity - oldQuantity;
+      const newAvailable = Math.max(0, oldAvailable + quantityDiff);
+
+      await updateDoc(bookRef, {
+        title: bookForm.title,
+        author: bookForm.author,
+        isbn: bookForm.isbn,
+        coverSrc: bookForm.coverSrc,
+        description: bookForm.description,
+        category: bookForm.category,
+        quantity: newQuantity,
+        available: newAvailable
+      });
+
+      setBookForm({ title: '', author: '', isbn: '', description: '', coverSrc: '', category: '', quantity: 1 });
+      // Reset file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      setShowEditBook(false);
+      setEditingBook(null);
+      alert('Book updated successfully!');
+    } catch (error) {
+      console.error('Error updating book:', error);
+      alert('Failed to update book. Please try again.');
+    }
+  };
+
+  const handleDeleteBook = async () => {
+    if (!editingBook) {
+      alert('No book selected for deletion');
+      return;
+    }
+
+    // Check if book has active borrows
+    try {
+      const activeBorrowsQuery = query(
+        collection(db, 'borrows'),
+        where('bookId', '==', editingBook.id),
+        where('status', '==', 'borrowed')
+      );
+      const activeBorrowsSnapshot = await getDocs(activeBorrowsQuery);
+      
+      if (!activeBorrowsSnapshot.empty) {
+        alert('Cannot delete book. There are active borrows for this book. Please return all borrowed copies first.');
+        return;
+      }
+
+      // Confirm deletion
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete "${editingBook.title}"?\n\nThis action cannot be undone.`
+      );
+
+      if (!confirmDelete) {
+        return;
+      }
+
+      // Delete book
+      const bookRef = doc(db, 'books', editingBook.id);
+      await deleteDoc(bookRef);
+
+      // Close modal and reset form
+      setBookForm({ title: '', author: '', isbn: '', description: '', coverSrc: '', category: '', quantity: 1 });
+      // Reset file input
+      const editModal = document.querySelector('.fixed');
+      if (editModal) {
+        const fileInput = editModal.querySelector('input[type="file"]');
+        if (fileInput) {
+          fileInput.value = '';
+        }
+      }
+      setShowEditBook(false);
+      setEditingBook(null);
+      alert('✓ Book deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      alert('Failed to delete book. Please try again.');
     }
   };
 
@@ -752,7 +872,7 @@ const BookBorrowSystem = () => {
                     <h3 className="font-bold text-lg text-gray-800 mb-2">{book.title}</h3>
                     <p className="text-gray-600 text-sm mb-1">by {book.author}</p>
                     <p className="text-gray-500 text-xs mb-3">ISBN: {book.isbn}</p>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         book.available > 0
                           ? 'bg-green-100 text-green-800'
@@ -760,6 +880,14 @@ const BookBorrowSystem = () => {
                       }`}>
                         {book.available}/{book.quantity} Available
                       </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditBook(book)}
+                        className="flex-1 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => {
                           setSelectedBook(book);
@@ -767,7 +895,7 @@ const BookBorrowSystem = () => {
                           setShowBorrowModal(true);
                         }}
                         disabled={book.available === 0}
-                        className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="flex-1 px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
                         Borrow
                       </button>
@@ -948,7 +1076,7 @@ const BookBorrowSystem = () => {
                 )}
 
                 <p className="text-xs text-gray-600 mt-2">
-                  Powered by Open Library API - Auto-fills title, author, and category
+                  Powered by Google Books API - Auto-fills title, author, category, description, and cover image
                 </p>
               </div>
 
@@ -1065,6 +1193,141 @@ const BookBorrowSystem = () => {
                     className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
                   >
                     Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showEditBook && (
+          <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <h2 className="text-2xl font-bold mb-4">Edit Book</h2>
+              
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Book Title"
+                  value={bookForm.title}
+                  onChange={(e) => setBookForm({ ...bookForm, title: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Author"
+                  value={bookForm.author}
+                  onChange={(e) => setBookForm({ ...bookForm, author: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cover Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        // Check file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                          alert('File size too large. Please select an image smaller than 5MB.');
+                          return;
+                        }
+                        
+                        // Check file type
+                        if (!file.type.startsWith('image/')) {
+                          alert('Please select a valid image file.');
+                          return;
+                        }
+                        
+                        // Convert to base64
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setBookForm({ ...bookForm, coverSrc: reader.result });
+                        };
+                        reader.onerror = () => {
+                          alert('Error reading file. Please try again.');
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {bookForm.coverSrc && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-600 mb-2">Preview:</p>
+                      <img
+                        src={bookForm.coverSrc}
+                        alt="Cover preview"
+                        className="w-32 h-48 object-cover rounded border border-gray-300"
+                      />
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="ISBN"
+                  value={bookForm.isbn}
+                  onChange={(e) => setBookForm({ ...bookForm, isbn: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+                <textarea
+                  placeholder="Description"
+                  value={bookForm.description}
+                  onChange={(e) => setBookForm({ ...bookForm, description: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  rows="4"
+                ></textarea>
+                <input
+                  type="text"
+                  placeholder="Category"
+                  value={bookForm.category}
+                  onChange={(e) => setBookForm({ ...bookForm, category: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Quantity"
+                  value={bookForm.quantity}
+                  onChange={(e) => setBookForm({ ...bookForm, quantity: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  min="1"
+                />
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleUpdateBook}
+                      className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                    >
+                      Update Book
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowEditBook(false);
+                        setEditingBook(null);
+                        setBookForm({ title: '', author: '', isbn: '', description: '', coverSrc: '', category: '', quantity: 1 });
+                        // Reset file input in edit modal
+                        const editModal = document.querySelector('.fixed');
+                        if (editModal) {
+                          const fileInput = editModal.querySelector('input[type="file"]');
+                          if (fileInput) {
+                            fileInput.value = '';
+                          }
+                        }
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleDeleteBook}
+                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Delete Book
                   </button>
                 </div>
               </div>

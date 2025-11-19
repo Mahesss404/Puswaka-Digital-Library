@@ -21,6 +21,7 @@ const Home = () => {
     const [userEmail, setUserEmail] = useState("");
     const [memberId, setMemberId] = useState(null);
     const [borrowedBooks, setBorrowedBooks] = useState([]);
+    const [allBooksFromDB, setAllBooksFromDB] = useState([]);
 
     useEffect(() => {
         // Listen to auth state changes
@@ -45,7 +46,6 @@ const Home = () => {
     useEffect(() => {
         if (!userEmail) return;
 
-        let memberUnsubscribe;
         let borrowsUnsubscribe;
 
         const findMemberAndListenBorrows = async () => {
@@ -144,6 +144,35 @@ const Home = () => {
         };
     }, [userEmail]);
 
+    // Load books from Firestore
+    useEffect(() => {
+        const booksUnsubscribe = onSnapshot(
+            collection(db, 'books'),
+            (snapshot) => {
+                const booksData = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        title: data.title || '',
+                        author: data.author || '',
+                        genre: data.category || data.genre || 'General',
+                        coverSrc: data.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
+                        isbn: data.isbn || '',
+                        description: data.description || '',
+                        available: data.available || 0,
+                        quantity: data.quantity || 0
+                    };
+                });
+                setAllBooksFromDB(booksData);
+            },
+            (error) => {
+                console.error('Error listening to books:', error);
+            }
+        );
+
+        return () => booksUnsubscribe();
+    }, []);
+
     // Close menu and search when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -164,17 +193,6 @@ const Home = () => {
             };
         }
     }, [isMenuOpen, isSearchOpen]);
-
-    const borrowedBook= {
-        user_uid: {
-            borrowing_id: {
-                bookid: "213",
-                title: "Atomic Habits",
-                borrowDate: "2023-10-27T10:00:00Z",
-                status: "borrowed"
-            }
-        }
-    }
 
     // Mock data for books
     const featuredBooks = [
@@ -198,37 +216,6 @@ const Home = () => {
             title: "Mindset: The New Psychology of Success",
             author: "Carol S. Dweck",
             genre: "Psychology"
-        }
-    ];
-
-    const recommendedBooks = [
-        {
-            id: 4,
-            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
-            title: "The Power of Habit",
-            author: "Charles Duhigg",
-            genre: "Self-Development"
-        },
-        {
-            id: 5,
-            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
-            title: "Atomic Habits",
-            author: "James Clear",
-            genre: "Self-Development"
-        },
-        {
-            id: 6,
-            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
-            title: "Mindset: The New Psychology of Success",
-            author: "Carol S. Dweck",
-            genre: "Psychology"
-        },
-        {
-            id: 7,
-            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
-            title: "Deep Work: Rules for Focused Success",
-            author: "Cal Newport",
-            genre: "Productivity"
         }
     ];
 
@@ -261,24 +248,88 @@ const Home = () => {
         }
     ];
 
-    // Combine all books for search
-    const allBooks = [...featuredBooks, ...recommendedBooks, ...borrowedBooks];
+    // Get recommendation books from database (10 books with various genres)
+    const getRecommendationBooks = () => {
+        if (allBooksFromDB.length === 0) {
+            return [];
+        }
 
-    // Filter recommendation books by genre only (not by search)
-    const recommendationBooks = (() => {
+        // If genre is selected, filter by genre
         if (selectedGenre) {
             const selectedGenreData = genres.find(g => g.name === selectedGenre);
             if (selectedGenreData) {
-                return allBooks.filter(book => 
+                const filtered = allBooksFromDB.filter(book => 
                     selectedGenreData.searchTerms.some(term => 
-                        book.genre.toLowerCase().includes(term.toLowerCase()) ||
-                        book.title.toLowerCase().includes(term.toLowerCase())
+                        book.genre?.toLowerCase().includes(term.toLowerCase()) ||
+                        book.category?.toLowerCase().includes(term.toLowerCase()) ||
+                        book.title?.toLowerCase().includes(term.toLowerCase())
                     )
                 );
+                return filtered.slice(0, 10);
             }
         }
-        return recommendedBooks;
-    })();
+
+        // Get diverse books from different genres (up to 10 books)
+        const genreMap = new Map();
+        const result = [];
+        
+        // Group books by genre/category
+        allBooksFromDB.forEach(book => {
+            const genre = book.genre || book.category || 'General';
+            if (!genreMap.has(genre)) {
+                genreMap.set(genre, []);
+            }
+            genreMap.get(genre).push(book);
+        });
+
+        // Take books from different genres to ensure diversity
+        const genresArray = Array.from(genreMap.keys());
+        let totalAdded = 0;
+        const maxPerGenre = Math.ceil(10 / genresArray.length);
+
+        for (const genre of genresArray) {
+            if (totalAdded >= 10) break;
+            
+            const booksInGenre = genreMap.get(genre);
+            const toAdd = Math.min(maxPerGenre, booksInGenre.length, 10 - totalAdded);
+            
+            for (let i = 0; i < toAdd && totalAdded < 10; i++) {
+                result.push(booksInGenre[i]);
+                totalAdded++;
+            }
+        }
+
+        // If we still need more books, fill from remaining
+        if (result.length < 10) {
+            for (const genre of genresArray) {
+                if (result.length >= 10) break;
+                const booksInGenre = genreMap.get(genre);
+                for (const book of booksInGenre) {
+                    if (result.length >= 10) break;
+                    if (!result.find(b => b.id === book.id)) {
+                        result.push(book);
+                    }
+                }
+            }
+        }
+
+        // If still less than 10, add any remaining books
+        if (result.length < 10) {
+            for (const book of allBooksFromDB) {
+                if (result.length >= 10) break;
+                if (!result.find(b => b.id === book.id)) {
+                    result.push(book);
+                }
+            }
+        }
+
+        return result.slice(0, 10);
+    };
+
+    const recommendationBooks = getRecommendationBooks();
+
+    // Combine all books for search
+    const allBooks = [...featuredBooks, ...recommendationBooks, ...borrowedBooks];
 
     // Filter books by search query only (for search results section)
     const searchResults = searchQuery.trim()
@@ -431,7 +482,7 @@ const Home = () => {
                                 onScroll={(e) => {
                                     const scrollLeft = e.target.scrollLeft;
                                     const itemWidth = 163; // book width (147) + gap (16)
-                                    const newIndex = Math.min(Math.round(scrollLeft / itemWidth), featuredBooks.length - 1);
+                                    const newIndex = Math.min(Math.round(scrollLeft / itemWidth), borrowedBooks.length - 1);
                                     if (newIndex >= 0 && newIndex !== currentCarouselIndex) {
                                         setCurrentCarouselIndex(newIndex);
                                     }
@@ -470,12 +521,11 @@ const Home = () => {
                                     <p className="text-sm sm:text-base text-white font-medium">See all</p>
                                 </div>
                             </div>
-                        ) : (
-                            <p className="text-gray-500 text-sm sm:text-base">No borrowed books at the moment.</p>
-                        )}
+                            
+                            ) : (
+                                <p className="text-gray-500 text-sm sm:text-base">No borrowed books at the moment.</p>
+                            )}
 
-
-                                
                             </div>
                             
                             {/* Carousel Indicators */}
