@@ -54,6 +54,65 @@ const BookBorrowSystem = () => {
     phone: '',
     membershipId: ''
   });
+
+  // Function to generate unique member ID from name
+  const generateMemberId = (name) => {
+    if (!name || name.trim().length === 0) {
+      return '';
+    }
+    
+    // Get first 2 letters (lowercase, remove spaces)
+    const cleanName = name.trim().toLowerCase().replace(/\s+/g, '');
+    if (cleanName.length < 2) {
+      // If name is too short, pad with 'x'
+      const paddedName = cleanName.padEnd(2, 'x');
+      const twoLetters = paddedName.substring(0, 2);
+      const randomNum = Math.floor(Math.random() * 90) + 10; // 10-99
+      return twoLetters + randomNum;
+    }
+    
+    const twoLetters = cleanName.substring(0, 2);
+    const randomNum = Math.floor(Math.random() * 90) + 10; // 10-99
+    return twoLetters + randomNum;
+  };
+
+  // Check if member ID is unique
+  const isMemberIdUnique = async (memberId) => {
+    if (!memberId) return false;
+    
+    try {
+      const existingMemberQuery = query(
+        collection(db, 'members'),
+        where('membershipId', '==', memberId)
+      );
+      const existingMemberSnapshot = await getDocs(existingMemberQuery);
+      return existingMemberSnapshot.empty;
+    } catch (error) {
+      console.error('Error checking member ID uniqueness:', error);
+      return false;
+    }
+  };
+
+  // Generate unique member ID (retry if not unique)
+  const generateUniqueMemberId = async (name) => {
+    let memberId = generateMemberId(name);
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (!(await isMemberIdUnique(memberId)) && attempts < maxAttempts) {
+      memberId = generateMemberId(name);
+      attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+      // Fallback: add timestamp unique
+      const baseId = generateMemberId(name);
+      const timestamp = Date.now().toString().slice(-2);
+      return baseId.substring(0, 2) + timestamp;
+    }
+    
+    return memberId;
+  };
   
   const [borrowForm, setBorrowForm] = useState({
     bookId: '',
@@ -492,33 +551,42 @@ const BookBorrowSystem = () => {
   };
 
   const handleAddMember = async () => {
-    if (!memberForm.name || !memberForm.email || !memberForm.membershipId) {
-      alert('Please fill in all required fields');
+    if (!memberForm.name || !memberForm.email) {
+      alert('Please fill in all required fields (Name and Email)');
       return;
     }
     
     try {
-      // Check if membership ID already exists
+      // Generate member ID if not already set
+      let finalMemberId = memberForm.membershipId;
+      if (!finalMemberId || finalMemberId.trim() === '') {
+        finalMemberId = await generateUniqueMemberId(memberForm.name);
+      }
+      
+      // Check if membership ID already exists (final check)
       const existingMemberQuery = query(
         collection(db, 'members'),
-        where('membershipId', '==', memberForm.membershipId)
+        where('membershipId', '==', finalMemberId)
       );
       const existingMemberSnapshot = await getDocs(existingMemberQuery);
       
       if (!existingMemberSnapshot.empty) {
-        alert('Membership ID already exists. Please use a different ID.');
-        return;
+        // Generate a new one if conflict
+        finalMemberId = await generateUniqueMemberId(memberForm.name);
       }
       
       const newMember = {
-        ...memberForm,
+        name: memberForm.name,
+        email: memberForm.email,
+        phone: memberForm.phone || '',
+        membershipId: finalMemberId,
         borrowedBooks: 0,
         joinedAt: serverTimestamp()
       };
       await addDoc(collection(db, 'members'), newMember);
       setMemberForm({ name: '', email: '', phone: '', membershipId: '' });
       setShowAddMember(false);
-      alert('Member added successfully!');
+      alert(`Member added successfully! Member ID: ${finalMemberId}`);
     } catch (error) {
       console.error('Error adding member:', error);
       alert('Failed to add member. Please try again.');
@@ -1344,7 +1412,16 @@ const BookBorrowSystem = () => {
                   type="text"
                   placeholder="Full Name"
                   value={memberForm.name}
-                  onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    // Auto-generate membership ID when name is entered
+                    if (newName.trim().length >= 2) {
+                      const generatedId = generateMemberId(newName);
+                      setMemberForm(prev => ({ ...prev, name: newName, membershipId: generatedId }));
+                    } else {
+                      setMemberForm(prev => ({ ...prev, name: newName, membershipId: '' }));
+                    }
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
                 <input
@@ -1356,18 +1433,26 @@ const BookBorrowSystem = () => {
                 />
                 <input
                   type="tel"
-                  placeholder="Phone Number"
+                  placeholder="Phone Number (Optional)"
                   value={memberForm.phone}
                   onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
-                <input
-                  type="text"
-                  placeholder="Membership ID"
-                  value={memberForm.membershipId}
-                  onChange={(e) => setMemberForm({ ...memberForm, membershipId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Membership ID (Auto-generated)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Membership ID"
+                    value={memberForm.membershipId}
+                    readOnly
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    ID akan di-generate otomatis dari nama (2 huruf pertama + 2 angka random)
+                  </p>
+                </div>
                 <div className="flex gap-3">
                   <button
                     onClick={handleAddMember}

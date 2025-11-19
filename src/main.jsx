@@ -9,6 +9,7 @@ import NotFoundPage from "./NotFoundPage.jsx";
 import Login from "./pages/Login.jsx";
 import Registration from "./pages/Registration.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
 import Verification from "./Verification.jsx";
 import IdCard from "@/pages/IdCard.jsx";
 import BookBorrowSystem from './pages/admin';
@@ -34,7 +35,14 @@ const router = createBrowserRouter([
     { path: '/verification', element: <Verification />,},
     { path: '/idcard', element: <IdCard />,},
     { path: '/book/:id', element: <BookDetail />,},
-    { path: '/admin', element: <BookBorrowSystem />,},
+    { 
+        path: '/admin', 
+        element: (
+            <AdminProtectedRoute>
+                <BookBorrowSystem />
+            </AdminProtectedRoute>
+        ),
+    },
 
 
 
