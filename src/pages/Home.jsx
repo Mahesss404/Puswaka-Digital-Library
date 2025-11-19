@@ -343,7 +343,7 @@ const Home = () => {
     // Navigation menu items
     const menuItems = [
         { path: '/home', label: 'Home', icon: HomeIcon },
-        { path: '/about', label: 'About', icon: null },
+        { path: '/profile', label: 'Profile', icon: null },
         { path: '/app', label: 'App', icon: null },
     ];
 

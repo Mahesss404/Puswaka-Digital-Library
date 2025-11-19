@@ -4,7 +4,6 @@ import './index.css'
 import App from './App.jsx'
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import Home from "./pages/Home.jsx";
-import About from "./pages/About.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
 import Login from "./pages/Login.jsx";
 import Registration from "./pages/Registration.jsx";
@@ -14,6 +13,7 @@ import Verification from "./Verification.jsx";
 import IdCard from "@/pages/IdCard.jsx";
 import BookBorrowSystem from './pages/admin';
 import BookDetail from './pages/BookDetail';
+import Profile from './pages/Profile.jsx';
 
 const router = createBrowserRouter([
     { path: '/',
@@ -28,7 +28,14 @@ const router = createBrowserRouter([
         </ProtectedRoute>
     },
     { path: '/home', element: <Home />,},
-    { path: '/about', element: <About />,},
+    { 
+        path: '/profile', 
+        element: (
+            <ProtectedRoute>
+                <Profile />
+            </ProtectedRoute>
+        ),
+    },
     { path: '*', element: <NotFoundPage />,},
     { path: '/login', element: <Login />,},
     { path: '/registration', element: <Registration />,},

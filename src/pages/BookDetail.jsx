@@ -358,21 +358,11 @@ const BookDetail = () => {
 
               {/* Borrow Button */}
               <div className="mt-8 pt-6 border-t border-gray-200">
-                {isUserBorrowed ? (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-green-800 font-semibold">✓ You have borrowed this book</p>
+                  <div className={`p-4 ${book.available > 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'} rounded-lg`}>
+                    <p className={`text-${book.available > 0 ? 'green-800' : 'red-800'} font-semibold`}>
+                      {book.available > 0 ? '✓ This Book Are Available' : '✗ This Book are Not Available'}
+                    </p>
                   </div>
-                ) : (
-                  <Button
-                    onClick={() => setShowBorrowModal(true)}
-                    disabled={!book.available || book.available === 0}
-                    className="w-full sm:w-auto px-8 py-3 text-lg text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    size="lg"
-                  >
-                    <Calendar className="w-5 h-5" />
-                    {book.available > 0 ? 'Borrow This Book' : 'Not Available'}
-                  </Button>
-                )}
               </div>
             </div>
           </div>
