@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -43,8 +44,17 @@ const Login = () => {
             localStorage.setItem("auth", "true");
             localStorage.setItem("username", displayName);
 
-            // Navigate to home after successful login
-            navigate("/home");
+            // Check if user is admin by querying Firestore
+            const adminsRef = collection(db, 'admins');
+            const q = query(adminsRef, where('email', '==', email.toLowerCase()));
+            const querySnapshot = await getDocs(q);
+            
+            // Navigate to admin dashboard if user is an admin, otherwise to home
+            if (!querySnapshot.empty) {
+                navigate("/admin");
+            } else {
+                navigate("/home");
+            }
         } catch (error) {
             console.error("Login error:", error);
             
