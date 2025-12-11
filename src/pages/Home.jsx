@@ -1,7 +1,19 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {useNavigate} from "react-router-dom";
 import Book from '../components/ui/Book.jsx';
-import { Menu, Search, Bell, ChevronRight, Brain, Heart, Sparkles, Apple, X, Home as HomeIcon } from 'lucide-react';
+import {
+    Menu,
+    Search,
+    Bell,
+    ChevronRight,
+    Brain,
+    Heart,
+    Sparkles,
+    Apple,
+    X,
+    Home as HomeIcon,
+    UserIcon
+} from 'lucide-react';
 import { collection, query, where, onSnapshot, getDocs, getDoc, doc as firestoreDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -329,7 +341,7 @@ const Home = () => {
     const recommendationBooks = getRecommendationBooks();
 
     // Combine all books for search
-    const allBooks = [...featuredBooks, ...recommendationBooks, ...borrowedBooks];
+    const allBooks = [...featuredBooks, ...recommendationBooks];
 
     // Filter books by search query only (for search results section)
     const searchResults = searchQuery.trim()
@@ -339,12 +351,10 @@ const Home = () => {
                    book.author.toLowerCase().includes(query);
           })
         : [];
-
     // Navigation menu items
     const menuItems = [
         { path: '/home', label: 'Home', icon: HomeIcon },
-        { path: '/profile', label: 'Profile', icon: null },
-        { path: '/app', label: 'App', icon: null },
+        { path: '/profile', label: 'Profile', icon: UserIcon },
     ];
 
     const handleGenreClick = (genreName) => {
@@ -369,8 +379,13 @@ const Home = () => {
         navigate(`/book/${bookId}`);
     };
 
+    const handleSeeAllClick = (books) => {
+        navigate('/bookcatalog', { state: { books } });
+    };
+
+
     return (
-        <div className="min-h-screen bg-white px-8 lg:px-12">
+        <div className="min-h-screen bg-white">
             {/* Top Navigation Bar */}
             <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 relative z-50">
                 <div className="flex items-center justify-between max-w-7xl mx-auto">
@@ -514,23 +529,25 @@ const Home = () => {
                                 ))}
 
                                 {/* See All Button */}
-                                <div className="flex-shrink-0 flex flex-col items-center justify-center sm:min-w-[24px] snap-start right-0">
-                                    <button className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors mb-2">
+                                {/* <div className="flex-shrink-0 flex flex-col items-center justify-center sm:min-w-[24px] snap-start right-0">
+                                    <button
+                                        onClick={() => handleSeeAllClick(borrowedBooks)}
+                                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors mb-2">
                                         <ChevronRight className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                                     </button>
                                     <p className="text-sm sm:text-base text-white font-medium">See all</p>
-                                </div>
+                                </div> */}
                             </div>
                             
                             ) : (
-                                <p className="text-gray-500 text-sm sm:text-base">No borrowed books at the moment.</p>
+                                <p className="text-white text-sm sm:text-base">No borrowed books at the moment.</p>
                             )}
 
                             </div>
                             
                             {/* Carousel Indicators */}
                             <div className="flex justify-center gap-2 mt-4">
-                                {featuredBooks.map((_, index) => (
+                                {borrowedBooks.map((_, index) => (
                                     <button
                                         key={index}
                                         onClick={() => {
@@ -590,7 +607,10 @@ const Home = () => {
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between mb-4 sm:mb-6">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-900">Recommendation For You</h3>
-                            <button className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                            <button 
+                                onClick={() => handleSeeAllClick(recommendationBooks)}
+                                className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                            >
                                 See all
                                 <ChevronRight className="w-4 h-4" />
                             </button>
@@ -614,47 +634,6 @@ const Home = () => {
                     </div>
                 </div>
 
-                {/* Borrowed Books Section */}
-                <div className="px-4 sm:px-6 py-6 sm:py-8 bg-gray-50">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex items-center justify-between mb-4 sm:mb-6">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Borrowed Books</h3>
-                            <button className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                                See all
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-                        </div>
-                        
-                        {borrowedBooks.length > 0 ? (
-                            <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
-                                {borrowedBooks.map((borrow) => (
-                                    <div key={borrow.id} className="flex-shrink-0">
-                                        <Book
-                                            id={borrow.book?.id || borrow.bookId}
-                                            coverSrc={borrow.book?.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"}
-                                            title={borrow.book?.title || borrow.bookTitle || "Unknown Book"}
-                                            author={borrow.book?.author || "Unknown Author"}
-                                            genre={borrow.book?.genre || borrow.book?.category || "General"}
-                                            textColor="text-gray-900"
-                                            className="snap-start"
-                                            onClick={handleBookClick}
-                                        />
-                                        <div className="mt-1 space-y-0.5">
-                                            <p className="text-xs sm:text-sm text-gray-600">
-                                                Borrowed: {borrow.borrowDate ? new Date(borrow.borrowDate).toLocaleDateString() : 'N/A'}
-                                            </p>
-                                            <p className="text-xs sm:text-sm font-medium text-red-600">
-                                                Due: {borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString() : 'N/A'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-gray-500 text-sm sm:text-base">No borrowed books at the moment.</p>
-                        )}
-                    </div>
-                </div>
 
                 {/* Search Results Section - Show when searching */}
                 {searchQuery.trim() && (

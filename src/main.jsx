@@ -11,9 +11,10 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
 import Verification from "./Verification.jsx";
 import IdCard from "@/pages/IdCard.jsx";
-import BookBorrowSystem from './pages/admin';
 import BookDetail from './pages/BookDetail';
 import Profile from './pages/Profile.jsx';
+import Admin from './pages/admin';
+import BookCatalog from './pages/BookCatalog';
 
 const router = createBrowserRouter([
     { path: '/',
@@ -42,11 +43,12 @@ const router = createBrowserRouter([
     { path: '/verification', element: <Verification />,},
     { path: '/idcard', element: <IdCard />,},
     { path: '/book/:id', element: <BookDetail />,},
+    { path: '/bookcatalog', element: <BookCatalog />,},
     { 
         path: '/admin', 
         element: (
             <AdminProtectedRoute>
-                <BookBorrowSystem />
+                <Admin />
             </AdminProtectedRoute>
         ),
     },

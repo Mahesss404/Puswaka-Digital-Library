@@ -23,7 +23,6 @@ const BookBorrowSystem = () => {
   const [members, setMembers] = useState([]);
   const [borrowRecords, setBorrowRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('newest');
   const [showAddBook, setShowAddBook] = useState(false);
   const [showEditBook, setShowEditBook] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
@@ -49,14 +48,12 @@ const BookBorrowSystem = () => {
   const videoRef = useRef(null);
   const codeReaderRef = useRef(null);
 
-  // Member form state
   const [memberForm, setMemberForm] = useState({
     name: '',
     email: '',
     phone: '',
     membershipId: ''
   });
-  const [editingMember, setEditingMember] = useState(null);
 
   // Function to generate unique member ID from name
   const generateMemberId = (name) => {
@@ -554,8 +551,8 @@ const BookBorrowSystem = () => {
   };
 
   const handleAddMember = async () => {
-    if (!memberForm.name || !memberForm.email || !memberForm.phone) {
-      alert('Please fill in all required fields (Name, Email, Phone)');
+    if (!memberForm.name || !memberForm.email) {
+      alert('Please fill in all required fields (Name and Email)');
       return;
     }
     
@@ -566,45 +563,30 @@ const BookBorrowSystem = () => {
         finalMemberId = await generateUniqueMemberId(memberForm.name);
       }
       
-      // Check if membership ID already exists (final check) and we're not editing
-      if (!editingMember) {
-        const existingMemberQuery = query(
-          collection(db, 'members'),
-          where('membershipId', '==', finalMemberId)
-        );
-        const existingMemberSnapshot = await getDocs(existingMemberQuery);
-        
-        if (!existingMemberSnapshot.empty) {
-          // Generate a new one if conflict
-          finalMemberId = await generateUniqueMemberId(memberForm.name);
-        }
+      // Check if membership ID already exists (final check)
+      const existingMemberQuery = query(
+        collection(db, 'members'),
+        where('membershipId', '==', finalMemberId)
+      );
+      const existingMemberSnapshot = await getDocs(existingMemberQuery);
+      
+      if (!existingMemberSnapshot.empty) {
+        // Generate a new one if conflict
+        finalMemberId = await generateUniqueMemberId(memberForm.name);
       }
       
-      const memberData = {
+      const newMember = {
         name: memberForm.name,
         email: memberForm.email,
         phone: memberForm.phone || '',
         membershipId: finalMemberId,
-        // Don't update these fields when editing
-        ...(editingMember ? {} : {
-          borrowedBooks: 0,
-          joinedAt: serverTimestamp()
-        })
+        borrowedBooks: 0,
+        joinedAt: serverTimestamp()
       };
-
-      if (editingMember) {
-        // Update existing member
-        await updateDoc(doc(db, 'members', editingMember.id), memberData);
-        alert('Member updated successfully!');
-        setEditingMember(null);
-      } else {
-        // Add new member
-        await addDoc(collection(db, 'members'), memberData);
-        alert(`Member added successfully! Member ID: ${finalMemberId}`);
-      }
-      
+      await addDoc(collection(db, 'members'), newMember);
       setMemberForm({ name: '', email: '', phone: '', membershipId: '' });
       setShowAddMember(false);
+      alert(`Member added successfully! Member ID: ${finalMemberId}`);
     } catch (error) {
       console.error('Error adding member:', error);
       alert('Failed to add member. Please try again.');
@@ -657,31 +639,6 @@ const BookBorrowSystem = () => {
       id: bookDoc2.id,
       ...bookDoc2.data()
     };
-  };
-
-  // Handle edit member
-  const handleEditMember = (member) => {
-    setEditingMember(member);
-    setMemberForm({
-      name: member.name,
-      email: member.email,
-      phone: member.phone || '',
-      membershipId: member.membershipId
-    });
-    setShowAddMember(true);
-  };
-
-  // Handle delete member
-  const handleDeleteMember = async (memberId) => {
-    if (window.confirm('Are you sure you want to delete this member? This action cannot be undone.')) {
-      try {
-        await deleteDoc(doc(db, 'members', memberId));
-        alert('Member deleted successfully');
-      } catch (error) {
-        console.error('Error deleting member:', error);
-        alert('Failed to delete member. Please try again.');
-      }
-    }
   };
 
   // Handle member ID input (scan or manual)
@@ -857,19 +814,7 @@ const BookBorrowSystem = () => {
     member.membershipId.includes(searchTerm)
   );
 
-  // Sort borrow records based on selected option
-  const sortedBorrows = [...borrowRecords].sort((a, b) => {
-    if (sortBy === 'newest') {
-      return new Date(b.borrowDate) - new Date(a.borrowDate);
-    } else if (sortBy === 'oldest') {
-      return new Date(a.dueDate) - new Date(b.dueDate);
-    }
-    return 0;
-  });
-
-  // fixdue
-
-  const filteredBorrows = sortedBorrows.filter(borrow =>
+  const filteredBorrows = borrowRecords.filter(borrow =>
     borrow.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
     borrow.memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     borrow.memberEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -887,7 +832,8 @@ const BookBorrowSystem = () => {
             <div className="flex items-center gap-3">
               <BookOpen className="w-10 h-10 text-indigo-600" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">Admin dashboard</h1>
+                <h1 className="text-3xl font-bold text-gray-800">Library Management System</h1>
+                <p className="text-gray-600">Efficient and error-free book borrowing</p>
               </div>
             </div>
             <div className="flex gap-4">
@@ -903,16 +849,6 @@ const BookBorrowSystem = () => {
                 <div className="text-2xl font-bold text-orange-600">{activeBorrows.length}</div>
                 <div className="text-sm text-gray-600">Active</div>
               </div>
-
-              <button
-                onClick={() => {
-                  setBorrowForm({ ...borrowForm });
-                  setShowBorrowModal(true);
-                }}
-                className="flex-1 px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Borrow
-              </button>
             </div>
           </div>
         </div>
@@ -995,30 +931,6 @@ const BookBorrowSystem = () => {
                   Add Member
                 </button>
               )}
-              {activeTab === 'borrows' && (
-                <div className="inline-flex rounded-md shadow-sm">
-                  <button
-                    onClick={() => setSortBy('newest')}
-                    className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                      sortBy === 'newest'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                    }`}
-                  >
-                    Newest
-                  </button>
-                  <button
-                    onClick={() => setSortBy('duedate')}
-                    className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
-                      sortBy === 'duedate'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border-t border-b border-r border-gray-300'
-                    }`}
-                  >
-                    Oldest
-                  </button>
-                </div>
-              )}
             </div>
 
             {activeTab === 'books' && (
@@ -1070,32 +982,10 @@ const BookBorrowSystem = () => {
                         <h3 className="font-bold text-lg text-gray-800">{member.name}</h3>
                         <p className="text-gray-600 text-sm">{member.email}</p>
                         <p className="text-gray-500 text-xs">ID: {member.membershipId}</p>
-                        <p className="text-gray-500 text-xs">Phone: {member.phone}</p>
-
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-indigo-600">{member.borrowedBooks}</div>
                         <div className="text-xs text-gray-600">Books Borrowed</div>
-                        <div className="flex gap-2 mt-2 justify-end">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditMember(member);
-                            }}
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                          >
-                            Edit
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteMember(member.id);
-                            }}
-                            className="text-xs text-red-600 hover:text-red-800"
-                          >
-                            Delete
-                          </button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -1275,7 +1165,7 @@ const BookBorrowSystem = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Cover Image
                   </label>
                   <input
@@ -1399,7 +1289,7 @@ const BookBorrowSystem = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 />
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Cover Image
                   </label>
                   <input
@@ -1516,10 +1406,8 @@ const BookBorrowSystem = () => {
         {showAddMember && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h2 className="text-xl font-semibold mb-4">
-                {editingMember ? 'Edit Member' : 'Add New Member'}
-              </h2>
-              <form className="space-y-4">
+              <h2 className="text-2xl font-bold mb-4">Add New Member</h2>
+              <div className="space-y-4">
                 <input
                   type="text"
                   placeholder="Full Name"
@@ -1545,8 +1433,7 @@ const BookBorrowSystem = () => {
                 />
                 <input
                   type="tel"
-                  placeholder="+62 81234567890"
-                  pattern="\+62 [0-9]{8,11}"
+                  placeholder="Phone Number (Optional)"
                   value={memberForm.phone}
                   onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -1580,7 +1467,7 @@ const BookBorrowSystem = () => {
                     Cancel
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}
@@ -1668,7 +1555,6 @@ const BookBorrowSystem = () => {
                     value={borrowForm.dueDate}
                     onChange={(e) => setBorrowForm({ ...borrowForm, dueDate: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
-                    max={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>

@@ -38,19 +38,17 @@ const Book = ({
 
   return (
     <div 
-      className={`max-w-[147px] sm:max-w-[160px] select-none flex-shrink-0 ${className} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`w-40 min-h-[240px] p-2 overflow-hidden rounded-lg ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={handleClick}
     >
-      <div className="relative w-full min-w-[147px] sm:min-w-[160px] h-[217px] sm:h-[240px] overflow-hidden rounded-md shadow-sm bg-white">
-        <img
-          src={coverSrc}
-          alt={title}
-          className="h-full w-full object-cover"
-          loading="lazy"
-        />
-      </div>
+      <img
+        src={coverSrc}
+        alt={title}
+        className="rounded-md m-auto w-40 object-contain"
+        loading="lazy"
+      />
       <div className="mt-2">
-        <h3 className={`text-[11px] sm:text-[12px] leading-tight font-semibold line-clamp-2 ${textColor || ''}`}>
+        <h3 className={`text-[16px] sm:text-[12px] leading-tight font-semibold line-clamp-2 ${textColor || ''}`}>
           {title}
         </h3>
         {author ? (
