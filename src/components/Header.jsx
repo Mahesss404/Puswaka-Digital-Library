@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Search, X, Bell, Home, BookOpen, Bookmark, User, Settings } from 'lucide-react';
+import { Menu, Search, X, Bell, Home, BookOpen, Bookmark, User, Settings, History } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -19,7 +19,7 @@ const Header = () => {
     const menuItems = [
         { label: 'Home', path: '/', icon: Home },
         { label: 'Book Catalog', path: '/catalog', icon: BookOpen },
-        { label: 'My Books', path: '/my-books', icon: Bookmark },
+        { label: 'History', path: '/history', icon: History },
         { label: 'Profile', path: '/profile', icon: User },
         { label: 'Settings', path: '/settings', icon: Settings }
     ];

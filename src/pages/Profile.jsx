@@ -123,7 +123,7 @@ const Profile = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-2">Member ID</h3>
-                                <p className="font-medium">{member.memberId || 'N/A'}</p>
+                                <p className="font-medium">{member.membershipId || 'N/A'}</p>
                             </div>
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-2">Phone</h3>
@@ -135,7 +135,7 @@ const Profile = () => {
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-2">Membership Since</h3>
                                 <p className="font-medium">
-                                    {member.joinedAt ? formatDate(member.joinedAt) : 'N/A'}
+                                    {member.joinedAt?.toDate ? formatDate(member.joinedAt.toDate()) : 'N/A'}
                                 </p>
                             </div>
                             <div className="bg-gray-50 p-4 rounded-lg">
