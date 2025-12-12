@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Book from "@/components/ui/Book";
 
+
 const BookCatalog = () => {
     const location = useLocation();
     const [books, setBooks] = useState([]);
