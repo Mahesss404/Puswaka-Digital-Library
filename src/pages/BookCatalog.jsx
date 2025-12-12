@@ -95,7 +95,7 @@ const BookCatalog = () => {
                     {filteredBooks.map((book) => (
                         <div
                             key={book.id}
-                            className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow-lg shadow-primary transition-shadow"
+                            className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow-lg shadow transition-shadow"
                         >
                             <Book
                                 id={book.id}

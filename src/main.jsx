@@ -15,6 +15,7 @@ import BookDetail from './pages/BookDetail';
 import Profile from './pages/Profile.jsx';
 import Admin from './pages/admin';
 import BookCatalog from './pages/BookCatalog';
+import History from './pages/History';
 
 const router = createBrowserRouter([
     { path: '/',
@@ -35,7 +36,15 @@ const router = createBrowserRouter([
             <ProtectedRoute>
                 <Profile />
             </ProtectedRoute>
-        ),
+        )
+    },
+    { 
+        path: '/history', 
+        element: (
+            <ProtectedRoute>
+                <History />
+            </ProtectedRoute>
+        )
     },
     { path: '*', element: <NotFoundPage />,},
     { path: '/login', element: <Login />,},

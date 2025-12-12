@@ -349,11 +349,6 @@ const Home = () => {
                    book.author.toLowerCase().includes(query);
           })
         : [];
-    // Navigation menu items
-    const menuItems = [
-        { path: '/home', label: 'Home', icon: HomeIcon },
-        { path: '/profile', label: 'Profile', icon: UserIcon },
-    ];
 
     const handleGenreClick = (genreName) => {
         setSelectedGenre(selectedGenre === genreName ? null : genreName);
@@ -416,10 +411,7 @@ const Home = () => {
                                             onClick={handleBookClick}
                                         />
                                         <div className="mt-1 space-y-0.5">
-                                            <p className="text-xs sm:text-sm text-white">
-                                                Borrowed: {borrow.borrowDate ? new Date(borrow.borrowDate).toLocaleDateString() : 'N/A'}
-                                            </p>
-                                            <p className="text-xs sm:text-sm font-medium">
+                                            <p className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                 Due: {borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString() : 'N/A'}
                                             </p>
                                         </div>
@@ -518,7 +510,7 @@ const Home = () => {
                             {recommendationBooks.map((book) => (
                                 <div
                                     key={book.id}
-                                    className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow-lg shadow-primary transition-shadow"
+                                    className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow-lg shadow transition-shadow"
                                     >
                                     <Book
                                         id={book.id}
