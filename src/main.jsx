@@ -43,7 +43,7 @@ const router = createBrowserRouter([
     { path: '/verification', element: <Verification />,},
     { path: '/idcard', element: <IdCard />,},
     { path: '/book/:id', element: <BookDetail />,},
-    { path: '/bookcatalog', element: <BookCatalog />,},
+    { path: '/catalog', element: <BookCatalog />,},
     { 
         path: '/admin', 
         element: (

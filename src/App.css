@@ -1,17 +1,10 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 #root {
   margin: 0 auto;
-  text-align: center;
   background: #4995ED;
 }
 
-.read-the-docs {
-  color: #888;
-}
 @theme {
   --color-primary: #4995ED;
   --color-secondary: #10b981;

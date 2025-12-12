@@ -2,9 +2,6 @@ import React, {useEffect, useState, useRef} from 'react';
 import {useNavigate} from "react-router-dom";
 import Book from '../components/ui/Book.jsx';
 import {
-    Menu,
-    Search,
-    Bell,
     ChevronRight,
     Brain,
     Heart,
@@ -17,6 +14,7 @@ import {
 import { collection, query, where, onSnapshot, getDocs, getDoc, doc as firestoreDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import Header from '@/components/Header.jsx';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -361,15 +359,6 @@ const Home = () => {
         setSelectedGenre(selectedGenre === genreName ? null : genreName);
     };
 
-    const handleMenuNavigation = (path) => {
-        navigate(path);
-        setIsMenuOpen(false);
-    };
-
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
-    };
-
     const handleClearSearch = () => {
         setSearchQuery("");
         setIsSearchOpen(false);
@@ -380,105 +369,14 @@ const Home = () => {
     };
 
     const handleSeeAllClick = (books) => {
-        navigate('/bookcatalog', { state: { books } });
+        navigate('/catalog', { state: { books } });
     };
 
 
     return (
         <div className="min-h-screen bg-white">
             {/* Top Navigation Bar */}
-            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 relative z-50">
-                <div className="flex items-center justify-between max-w-7xl mx-auto">
-                    <div className="relative" ref={menuRef}>
-                        <button 
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                            <Menu className="w-6 h-6 text-gray-700" />
-                        </button>
-                        
-                        {/* Menu Popup */}
-                        {isMenuOpen && (
-                            <div className="absolute left-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                                {menuItems.map((item) => {
-                                    const IconComponent = item.icon;
-                                    return (
-                                        <button
-                                            key={item.path}
-                                            onClick={() => handleMenuNavigation(item.path)}
-                                            className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-3 text-gray-700"
-                                        >
-                                            {IconComponent && <IconComponent className="w-4 h-4" />}
-                                            <span>{item.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="flex items-center gap-3 sm:gap-4">
-                        <div className="relative" ref={searchRef}>
-                            <button 
-                                data-search-button
-                                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                <Search className="w-6 h-6 text-gray-700" />
-                            </button>
-                            
-                            {/* Search Popup */}
-                            {isSearchOpen && (
-                                <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-50">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Search className="w-5 h-5 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search books by name..."
-                                            value={searchQuery}
-                                            onChange={handleSearchChange}
-                                            className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400"
-                                            autoFocus
-                                        />
-                                        <button
-                                            onClick={handleClearSearch}
-                                            className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                        >
-                                            <X className="w-4 h-4 text-gray-400" />
-                                        </button>
-                                    </div>
-                                    
-                                    {/* Search Results Preview */}
-                                    {searchQuery.trim() && (
-                                        <div className="max-h-64 overflow-y-auto">
-                                            {searchResults.length > 0 ? (
-                                                <div className="space-y-1">
-                                                    {searchResults.slice(0, 5).map((book) => (
-                                                        <div
-                                                            key={book.id}
-                                                            className="p-2 hover:bg-gray-50 rounded cursor-pointer text-sm"
-                                                        >
-                                                            <p className="font-medium text-gray-900">{book.title}</p>
-                                                            <p className="text-xs text-gray-500">By {book.author}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <p className="text-sm text-gray-500 text-center py-4">No books found</p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-                            <Bell className="w-6 h-6 text-gray-700" />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <Header/>
 
             {/* Main Content */}
             <div className="pb-8">
@@ -618,17 +516,21 @@ const Home = () => {
                         
                         <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
                             {recommendationBooks.map((book) => (
-                                <Book
+                                <div
                                     key={book.id}
-                                    id={book.id}
-                                    coverSrc={book.coverSrc}
-                                    title={book.title}
-                                    author={book.author}
-                                    genre={book.genre}
-                                    textColor="text-gray-900"
-                                    className="snap-start"
-                                    onClick={handleBookClick}
-                                />
+                                    className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow-lg shadow-primary transition-shadow"
+                                    >
+                                    <Book
+                                        id={book.id}
+                                        coverSrc={book.coverSrc}
+                                        title={book.title}
+                                        author={book.author}
+                                        genre={book.genre}
+                                        textColor="text-gray-900"
+                                        className="snap-start"
+                                        onClick={handleBookClick}
+                                    />
+                                </div>
                             ))}
                         </div>
                     </div>
