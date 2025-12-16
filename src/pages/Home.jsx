@@ -374,7 +374,7 @@ const Home = () => {
             <Header/>
 
             {/* Main Content */}
-            <div className="pb-8">
+            <div className="p-4 lg:p-8 flex flex-col gap-4">
                 {/* Hero Carousel Section - Blue Background */}
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 sm:px-6 py-6 sm:py-8">
                     <div className="max-w-7xl mx-auto">
@@ -417,16 +417,6 @@ const Home = () => {
                                         </div>
                                     </div>
                                 ))}
-
-                                {/* See All Button */}
-                                {/* <div className="flex-shrink-0 flex flex-col items-center justify-center sm:min-w-[24px] snap-start right-0">
-                                    <button
-                                        onClick={() => handleSeeAllClick(borrowedBooks)}
-                                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors mb-2">
-                                        <ChevronRight className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                                    </button>
-                                    <p className="text-sm sm:text-base text-white font-medium">See all</p>
-                                </div> */}
                             </div>
                             
                             ) : (
@@ -460,7 +450,7 @@ const Home = () => {
                 </div>
 
                 {/* Explore by Genre Section */}
-                <div className="px-4 sm:px-6 py-6 sm:py-8 bg-white">
+                <div className="bg-white">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between mb-4 sm:mb-6">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-900">Explore by Genre</h3>
@@ -493,7 +483,7 @@ const Home = () => {
                 </div>
 
                 {/* Recommendation For You Section */}
-                <div className="px-4 sm:px-6 py-6 sm:py-8 bg-white">
+                <div className="bg-white">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between mb-4 sm:mb-6">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-900">Recommendation For You</h3>

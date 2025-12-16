@@ -4,6 +4,7 @@ import { User, Mail, Phone, BookOpen, ArrowLeft } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import Header from '@/components/Header';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -93,9 +94,10 @@ const Profile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
                 {/* Header */}
+                <Header />
+            <div className="max-w-4xl mx-auto p-4">
                 <div className="mb-6">
                     <button
                         onClick={() => navigate('/home')}
