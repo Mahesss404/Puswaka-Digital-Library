@@ -5,17 +5,17 @@ import App from './App.jsx'
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
-import Login from "./pages/Login.jsx";
-import Registration from "./pages/Registration.jsx";
+import Login from "./pages/Auth/Login.jsx";
+import Registration from "./pages/Auth/Registration.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
-import Verification from "./Verification.jsx";
-import IdCard from "@/pages/IdCard.jsx";
-import BookDetail from './pages/BookDetail';
-import Profile from './pages/Profile.jsx';
-import Admin from './pages/admin';
-import BookCatalog from './pages/BookCatalog';
-import History from './pages/History';
+import Verification from "./pages/Auth/Verification.jsx";
+import IdCard from "@/pages/Auth/IdCard.jsx";
+import BookDetail from './pages/Books/BookDetail';
+import Profile from './pages/Users/Profile.jsx';
+import Admin from './pages/Admin/Admin';
+import BookCatalog from './pages/Books/BookCatalog';
+import History from './pages/Users/History';
 
 const router = createBrowserRouter([
     { path: '/',
