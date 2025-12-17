@@ -114,22 +114,18 @@ const BookCatalog = () => {
                 ) : filteredBooks.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4">
                         {filteredBooks.map((book) => (
-                            <div
+                            <Book
                                 key={book.id}
-                                className=" bg-white rounded-md border border-gray-200 flex justify-center items-center h-full hover:shadow transition-shadow py-2"
-                            >
-                                <Book
-                                    id={book.id}
-                                    coverSrc={book.coverSrc || null}
-                                    title={book.title}
-                                    author={book.author}
-                                    genre={book.genre}
-                                    available={book.available}
-                                    textColor="text-gray-900"
-                                    className="w-full"
-                                    onClick={handleBookClick}
-                                />
-                            </div>
+                                id={book.id}
+                                coverSrc={book.coverSrc || null}
+                                title={book.title}
+                                author={book.author}
+                                genre={book.genre}
+                                available={book.available}
+                                textColor="text-gray-900"
+                                className="h-full w-full"
+                                onClick={handleBookClick}
+                            />
                         ))}
                     </div>
                 ) : (

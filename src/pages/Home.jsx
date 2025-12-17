@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useRef} from 'react';
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import Book from '../components/ui/Book.jsx';
 import {
     ChevronRight,
@@ -487,32 +487,30 @@ const Home = () => {
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between mb-4 sm:mb-6">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-900">Recommendation For You</h3>
-                            <button 
-                                onClick={() => handleSeeAllClick(recommendationBooks)}
+                            <Link 
+                                to="/catalog"
+                                // onClick={() => handleSeeAllClick(recommendationBooks)}
                                 className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                             >
                                 See all
                                 <ChevronRight className="w-4 h-4" />
-                            </button>
+                            </Link>
                         </div>
                         
-                        <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
+                        <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide">
                             {recommendationBooks.map((book) => (
-                                <div
+                                <Book
                                     key={book.id}
-                                    className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow-lg shadow transition-shadow"
-                                    >
-                                    <Book
-                                        id={book.id}
-                                        coverSrc={book.coverSrc}
-                                        title={book.title}
-                                        author={book.author}
-                                        genre={book.genre}
-                                        textColor="text-gray-900"
-                                        className="snap-start"
-                                        onClick={handleBookClick}
-                                    />
-                                </div>
+                                    id={book.id}
+                                    coverSrc={book.coverSrc}
+                                    title={book.title}
+                                    author={book.author}
+                                    genre={book.genre}
+                                    textColor="text-gray-900"
+                                    className="snap-start min-w-[160px] max-w-[160px]"
+                                    available={book.available}
+                                    onClick={handleBookClick}
+                                />
                             ))}
                         </div>
                     </div>
