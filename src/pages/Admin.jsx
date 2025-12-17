@@ -470,7 +470,7 @@ const BookBorrowSystem = () => {
       const newQuantity = parseInt(bookForm.quantity);
       const oldAvailable = currentBook?.available || editingBook.available;
       const quantityDiff = newQuantity - oldQuantity;
-      const newAvailable = Math.max(0, oldAvailable + quantityDiff);
+      const newAvailable = Math.min(newQuantity, Math.max(0, oldAvailable + quantityDiff));
 
       await updateDoc(bookRef, {
         title: bookForm.title,
@@ -778,7 +778,7 @@ const BookBorrowSystem = () => {
       if (bookDoc.exists()) {
         const book = bookDoc.data();
         await updateDoc(doc(db, 'books', record.bookId), {
-          available: (book.available || 0) + 1
+          available: Math.min(book.quantity || 1, (book.available || 0) + 1)
         });
       }
 
