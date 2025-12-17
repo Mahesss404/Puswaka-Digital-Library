@@ -36,9 +36,10 @@ const IdCard = () => {
                 ),
 
                 // Address: capture lines after "Alamat" up to the first line that doesn't look like part of address
+                // key change: capturing group matches content after Alamat, excluding | if present
                 address: extractField(
                     text,
-                    /Alamat\s*[:.]?\s*(.+)/i
+                    /Alamat\s*[:.]?\s*([^|\n]+)/i
                 ),
 
                 // NIS: digits after "NIS"
@@ -57,7 +58,11 @@ const IdCard = () => {
 
     const extractField = (text, regex) => {
         const match = text.match(regex);
-        return match ? match[0].trim() : "Not found";
+        // If there's a capturing group (match[1]), return that. Otherwise return the whole match.
+        if (match) {
+            return match[1] ? match[1].trim() : match[0].trim();
+        }
+        return "Not found";
     };
 
 
@@ -110,13 +115,13 @@ const IdCard = () => {
                     </div>
                 )}
 
-                {/*/!* Save JSON *!/*/}
-                {/*<button*/}
-                {/*    onClick={handleSaveToDB}*/}
-                {/*    className="mt-4 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition"*/}
-                {/*>*/}
-                {/*    Save JSON to Database*/}
-                {/*</button>*/}
+                {/* Save JSON */}
+                {/* <button
+                    onClick={handleSaveToDB}
+                    className="mt-4 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition"
+                >
+                    Save JSON to Database
+                </button> */}
             </div>
         </div>
     );
