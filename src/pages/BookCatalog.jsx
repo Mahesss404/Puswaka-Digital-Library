@@ -116,7 +116,7 @@ const BookCatalog = () => {
                         {filteredBooks.map((book) => (
                             <div
                                 key={book.id}
-                                className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow-lg shadow transition-shadow"
+                                className="bg-white rounded-md border border-gray-200 flex justify-center items-center w-full hover:shadow transition-shadow"
                             >
                                 <Book
                                     id={book.id}
@@ -124,6 +124,7 @@ const BookCatalog = () => {
                                     title={book.title}
                                     author={book.author}
                                     genre={book.genre}
+                                    available={book.available}
                                     textColor="text-gray-900"
                                     className="w-full"
                                     onClick={handleBookClick}

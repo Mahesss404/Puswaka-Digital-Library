@@ -41,25 +41,48 @@ const Book = ({
       className={`w-40 min-h-[240px] p-2 overflow-hidden rounded-lg ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={handleClick}
     >
-      <img
-        src={coverSrc}
-        alt={title}
-        className="rounded-md m-auto w-40 object-contain"
-        loading="lazy"
-      />
+      <div className="w-full aspect-[9/16] rounded-md overflow-hidden">
+        <img
+          src={coverSrc}
+          alt={title}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
       <div className="mt-2">
-        <h3 className={`text-[16px] sm:text-[12px] leading-tight font-semibold line-clamp-2 ${textColor || ''}`}>
+        <h3 className={`text-xs sm:text-[16px] leading-tight font-bold line-clamp-2 ${textColor || ''}`}>
           {title}
         </h3>
         {author ? (
-          <p className={`text-[10px] sm:text-[11px] leading-tight line-clamp-1 mt-0.5 ${textColor || ''}`}>
+          <p className={`text-xs sm:text-[16px] leading-tight line-clamp-1 mt-0.5 ${textColor || ''}`}>
             By {author}
           </p>
         ) : null}
         {genre ? (
-          <p className={`text-[9px] sm:text-[10px] leading-tight line-clamp-1 mt-0.5 ${textColor || ''}`}>
+          <p className={`text-xs sm:text-[16px] leading-tight line-clamp-1 mt-0.5 ${textColor || ''}`}>
             {genre}
           </p>
+        ) : null}
+        {typeof available === 'number' ? (
+          (() => {
+            let bgColorClass = '';
+            let txtColorClass = '';
+            if (available === 0) {
+              bgColorClass = 'bg-red-100';
+              txtColorClass = 'text-red-800';
+            } else if (available < 3) {
+              bgColorClass = 'bg-yellow-100';
+              txtColorClass = 'text-yellow-800';
+            } else {
+              bgColorClass = 'bg-green-100';
+              txtColorClass = 'text-green-800';
+            }
+            return (
+              <p className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium ${bgColorClass} ${txtColorClass} ${textColor || ''}`}>
+                Available: {available}
+              </p>
+            );
+          })()
         ) : null}
       </div>
     </div>
