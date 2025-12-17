@@ -38,7 +38,7 @@ const Book = ({
 
   return (
     <div 
-      className={`w-40 min-h-[240px] p-2 overflow-hidden rounded-lg ${className} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`rounded-lg w-40 hover:shadow-custom ease-in-out duration-500 ${onClick ? 'cursor-pointer' : ''}`}
       onClick={handleClick}
     >
       <div className="w-full aspect-[9/16] rounded-md overflow-hidden">
