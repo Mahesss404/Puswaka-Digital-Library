@@ -300,7 +300,7 @@ const BookDetail = () => {
                 <div className="flex items-center gap-2 mb-4">
                   <Tag className="w-5 h-5 text-gray-500" />
                   <p className="text-lg text-gray-700">
-                    <span className="font-semibold">Genre:</span> {book.genre || book.category}
+                    <span className="font-semibold">Category:</span> {book.category || book.genre}
                   </p>
                 </div>
               ) : null}

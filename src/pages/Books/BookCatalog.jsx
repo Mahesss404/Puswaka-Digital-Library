@@ -59,13 +59,15 @@ const BookCatalog = () => {
         }
 
         const filtered = books.filter(book => 
-            book.title?.toLowerCase().includes(query) ||
+            book.category?.toLowerCase().includes(query) ||
             book.author?.toLowerCase().includes(query) ||
-            book.genre?.toLowerCase().includes(query) ||
-            book.isbn?.toLowerCase().includes(query)
+            book.title?.toLowerCase().includes(query) 
+            // book.isbn?.toLowerCase().includes(query)
         );
         setFilteredBooks(filtered);
     };
+
+    console.log(books);
 
     return (
         <div className="bg-white">
@@ -97,7 +99,7 @@ const BookCatalog = () => {
                     <div className="relative w-full md:w-80">
                         <input
                             type="text"
-                            placeholder="Search by title, author, or genre..."
+                            placeholder="Search by title, author, or category..."
                             value={searchQuery}
                             onChange={handleSearch}
                             className="w-full p-2 pl-10 border border-primary rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -120,7 +122,7 @@ const BookCatalog = () => {
                                 coverSrc={book.coverSrc || null}
                                 title={book.title}
                                 author={book.author}
-                                genre={book.genre}
+                                category={book.category}
                                 available={book.available}
                                 textColor="text-gray-900"
                                 className="h-full w-full"

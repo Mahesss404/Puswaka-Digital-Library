@@ -53,6 +53,7 @@ const Header = () => {
                 if (
                     (book.title && book.title.toLowerCase().includes(searchLower)) ||
                     (book.author && book.author.toLowerCase().includes(searchLower)) ||
+                    (book.category && book.category.toLowerCase().includes(searchLower)) ||
                     (book.genre && book.genre.toLowerCase().includes(searchLower)) ||
                     (book.isbn && book.isbn.toLowerCase().includes(searchLower))
                 ) {

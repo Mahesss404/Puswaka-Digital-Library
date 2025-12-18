@@ -165,7 +165,7 @@ const Home = () => {
                         id: doc.id,
                         title: data.title || '',
                         author: data.author || '',
-                        genre: data.category || data.genre || 'General',
+                        category: data.category || data.genre || 'General',
                         coverSrc: data.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
                         isbn: data.isbn || '',
                         description: data.description || '',
@@ -211,21 +211,21 @@ const Home = () => {
             coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
             title: "Atomic Habits",
             author: "James Clear",
-            genre: "Self-Development"
+            category: "Self-Development"
         },
         {
             id: 2,
             coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
             title: "Atomic Habits",
             author: "James Clear",
-            genre: "Self-Development"
+            category: "Self-Development"
         },
         {
             id: 3,
             coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
             title: "Mindset: The New Psychology of Success",
             author: "Carol S. Dweck",
-            genre: "Psychology"
+            category: "Psychology"
         }
     ];
 
@@ -405,7 +405,7 @@ const Home = () => {
                                             coverSrc={borrow.book?.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"}
                                             title={borrow.book?.title || borrow.bookTitle || "Unknown Book"}
                                             author={borrow.book?.author || "Unknown Author"}
-                                            genre={borrow.book?.genre || borrow.book?.category || "General"}
+                                            category={borrow.book?.category || borrow.book?.genre || "General"}
                                             textColor="text-white"
                                             className="snap-start"
                                             onClick={handleBookClick}
@@ -453,7 +453,7 @@ const Home = () => {
                 <div className="bg-white">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between mb-4 sm:mb-6">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Explore by Genre</h3>
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Explore by Category</h3>
                             <button className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
                                 See all
                                 <ChevronRight className="w-4 h-4" />
@@ -505,7 +505,7 @@ const Home = () => {
                                     coverSrc={book.coverSrc}
                                     title={book.title}
                                     author={book.author}
-                                    genre={book.genre}
+                                    category={book.category || book.genre}
                                     textColor="text-gray-900"
                                     className="snap-start min-w-[160px] max-w-[160px]"
                                     available={book.available}
@@ -543,7 +543,7 @@ const Home = () => {
                                             coverSrc={book.coverSrc}
                                             title={book.title}
                                             author={book.author}
-                                            genre={book.genre}
+                                            category={book.category || book.genre}
                                             textColor="text-gray-900"
                                             className="snap-start"
                                             onClick={handleBookClick}
