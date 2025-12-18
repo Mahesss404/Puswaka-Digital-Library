@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Menu, Search, X, Bell, Home, BookOpen, Bookmark, User, Settings, History } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -213,10 +213,10 @@ const Header = () => {
                         )}
                     </div>
                     
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
+                    <Link to="/notification" className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
                         <Bell className="w-6 h-6 text-gray-700" />
                         <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>
