@@ -1,6 +1,7 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {Link, useNavigate} from "react-router-dom";
 import Book from '../components/ui/Book.jsx';
+import BookSkeleton from '../components/ui/BookSkeleton.jsx';
 import {
     ChevronRight,
     Brain,
@@ -32,6 +33,9 @@ const Home = () => {
     const [memberId, setMemberId] = useState(null);
     const [borrowedBooks, setBorrowedBooks] = useState([]);
     const [allBooksFromDB, setAllBooksFromDB] = useState([]);
+    const [isLoadingBorrows, setIsLoadingBorrows] = useState(true);
+    const [isLoadingBooks, setIsLoadingBooks] = useState(true);
+    const [borrowCount, setBorrowCount] = useState(0);
 
     useEffect(() => {
         // Listen to auth state changes
@@ -54,7 +58,12 @@ const Home = () => {
 
     // Find member by email and listen to borrowed books
     useEffect(() => {
-        if (!userEmail) return;
+        if (!userEmail) {
+            setIsLoadingBorrows(false);
+            return;
+        }
+        
+        setIsLoadingBorrows(true);
 
         let borrowsUnsubscribe;
 
@@ -80,6 +89,7 @@ const Home = () => {
                             where('status', '==', 'borrowed')
                         ),
                         async (snapshot) => {
+                            setBorrowCount(snapshot.size);
                             const borrowPromises = snapshot.docs.map(async (doc) => {
                                 const borrowData = doc.data();
                                 
@@ -136,14 +146,19 @@ const Home = () => {
                             });
                             
                             setBorrowedBooks(borrows);
+                            setIsLoadingBorrows(false);
                         },
                         (error) => {
                             console.error('Error listening to borrows:', error);
+                            setIsLoadingBorrows(false);
                         }
                     );
+                } else {
+                    setIsLoadingBorrows(false);
                 }
             } catch (error) {
                 console.error('Error finding member:', error);
+                setIsLoadingBorrows(false);
             }
         };
 
@@ -174,9 +189,11 @@ const Home = () => {
                     };
                 });
                 setAllBooksFromDB(booksData);
+                setIsLoadingBooks(false);
             },
             (error) => {
                 console.error('Error listening to books:', error);
+                setIsLoadingBooks(false);
             }
         );
 
@@ -396,7 +413,15 @@ const Home = () => {
                                     }
                                 }}
                             >
-                                {borrowedBooks.length > 0 ? (
+                                {isLoadingBorrows ? (
+                                    <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
+                                        {[...Array(borrowCount > 0 ? borrowCount : 3)].map((_, index) => (
+                                            <div key={index} className="flex-shrink-0 w-[180px] sm:w-[200px]">
+                                                <BookSkeleton className="w-full" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : borrowedBooks.length > 0 ? (
                             <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
                                 {borrowedBooks.map((borrow) => (
                                     <div key={borrow.id} className="flex-shrink-0">
@@ -407,8 +432,9 @@ const Home = () => {
                                             author={borrow.book?.author || "Unknown Author"}
                                             category={borrow.book?.category || borrow.book?.genre || "General"}
                                             textColor="text-white"
-                                            className="snap-start"
+                                            className="snap-start w-[180px] sm:w-[200px]"
                                             onClick={handleBookClick}
+                                            showStatusOverlay={false}
                                         />
                                         <div className="mt-1 space-y-0.5">
                                             <p className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -498,20 +524,29 @@ const Home = () => {
                         </div>
                         
                         <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide">
-                            {recommendationBooks.map((book) => (
-                                <Book
-                                    key={book.id}
-                                    id={book.id}
-                                    coverSrc={book.coverSrc}
-                                    title={book.title}
-                                    author={book.author}
-                                    category={book.category || book.genre}
-                                    textColor="text-gray-900"
-                                    className="snap-start min-w-[160px] max-w-[160px]"
-                                    available={book.available}
-                                    onClick={handleBookClick}
-                                />
-                            ))}
+                            {isLoadingBooks ? (
+                                [...Array(10)].map((_, index) => (
+                                    <BookSkeleton 
+                                        key={index} 
+                                        className="snap-start min-w-[160px] max-w-[160px]" 
+                                    />
+                                ))
+                            ) : (
+                                recommendationBooks.map((book) => (
+                                    <Book
+                                        key={book.id}
+                                        id={book.id}
+                                        coverSrc={book.coverSrc}
+                                        title={book.title}
+                                        author={book.author}
+                                        category={book.category || book.genre}
+                                        textColor="text-gray-900"
+                                        className="snap-start min-w-[160px] max-w-[160px]"
+                                        available={book.available}
+                                        onClick={handleBookClick}
+                                    />
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

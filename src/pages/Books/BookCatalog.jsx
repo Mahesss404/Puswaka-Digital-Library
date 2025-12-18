@@ -5,6 +5,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Book from "@/components/ui/Book";
 import Header from "@/components/Header";
+import BookSkeleton from "@/components/ui/BookSkeleton";
 
 const BookCatalog = () => {
     const location = useLocation();
@@ -110,8 +111,10 @@ const BookCatalog = () => {
 
                 {/* Book Grid */}
                 {isLoading ? (
-                    <div className="flex justify-center items-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4">
+                        {[...Array(14)].map((_, index) => (
+                            <BookSkeleton key={index} className="h-full w-full" />
+                        ))}
                     </div>
                 ) : filteredBooks.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4">

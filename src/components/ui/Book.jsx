@@ -28,7 +28,8 @@ const Book = ({
   description = '',
   available = 0,
   quantity = 0,
-  isbn = ''
+  isbn = '',
+  showStatusOverlay = true
 }) => {
   const handleClick = () => {
     if (onClick && id) {
@@ -60,7 +61,7 @@ const Book = ({
         )}
 
         {/* Status Overlay (Only if low stock or out of stock) */}
-        {typeof available === 'number' && available <= 0 && (
+        {showStatusOverlay && typeof available === 'number' && available <= 0 && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
             <span className="px-3 py-1 bg-red-100 text-red-500 text-xs font-bold rounded-full shadow-lg">
               Out of Stock
