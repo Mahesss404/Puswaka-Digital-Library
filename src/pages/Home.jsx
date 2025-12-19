@@ -393,7 +393,7 @@ const Home = () => {
             {/* Main Content */}
             <div className="p-4 lg:p-8 flex flex-col gap-4">
                 {/* Hero Carousel Section - Blue Background */}
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 px-4 sm:px-6 py-6 sm:py-8">
+                <div className="bg-primary rounded-2xl px-4 sm:px-6 py-6 sm:py-8">
                     <div className="max-w-7xl mx-auto">
                         <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
                             Selamat datang, {username} 👋
@@ -403,7 +403,7 @@ const Home = () => {
                         <div className="relative">
                             <div 
                                 ref={carouselRef}
-                                className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
+                                className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory "
                                 onScroll={(e) => {
                                     const scrollLeft = e.target.scrollLeft;
                                     const itemWidth = 163; // book width (147) + gap (16)
@@ -431,7 +431,6 @@ const Home = () => {
                                             title={borrow.book?.title || borrow.bookTitle || "Unknown Book"}
                                             author={borrow.book?.author || "Unknown Author"}
                                             category={borrow.book?.category || borrow.book?.genre || "General"}
-                                            textColor="text-white"
                                             className="snap-start w-[180px] sm:w-[200px]"
                                             onClick={handleBookClick}
                                             showStatusOverlay={false}
