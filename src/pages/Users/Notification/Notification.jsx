@@ -195,12 +195,17 @@ const Notification = () => {
     }
 
     return (
-        <div className="mx-auto w-full p-8 bg-white max-w-7xl">
-            <div className="flex items-center gap-2 mb-4">
-                <Link to='/home' className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors">
-                    <ArrowLeft className="w-4 h-4" />
-                    <Text size="lg">Back to Home</Text>
-                </Link>
+        <div className="mx-auto w-full bg-white max-w-7xl">
+            <div className="bg-white border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+                    <Link
+                        to="/home"
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        <span>Back to Home</span>
+                    </Link>
+                </div>
             </div>
             
             {/* Header / Search */}
@@ -227,13 +232,13 @@ const Notification = () => {
                             className={cn(
                                 "px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap",
                                 activeTab === cat 
-                                    ? "border-blue-600 text-blue-600" 
+                                    ? "bg-blue-100 text-blue-600" 
                                     : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                             )}
                         >   
-                            {cat === 'Activity' && <BellRing className="w-4 h-4"/>}
-                            {cat === 'Alert' && <AlertCircle className="w-4 h-4"/>}
-                            {cat === 'Promotion' && <Info className="w-4 h-4"/>}
+                            {cat === 'Activity' && <BellRing className="w-4 h-4 text-green-600"/>}
+                            {cat === 'Alert' && <AlertCircle className="w-4 h-4 text-red-600"/>}
+                            {cat === 'Promotion' && <Info className="w-4 h-4 text-orange-600"/>}
                             {cat}
                         </button>
                     ))}
@@ -256,7 +261,7 @@ const Notification = () => {
                                 key={notif.id}
                                 onClick={() => navigate(`/notification/${notif.id}`, { state: { notification: notif } })} 
                                 className={cn(
-                                    "group flex items-center gap-4 px-4 py-3 border-b hover:shadow-md cursor-pointer transition-all bg-white hover:z-10 relative",
+                                    "group flex items-center gap-4 px-4 py-3 border-b border-gray-200 hover:shadow-md cursor-pointer transition-all bg-white hover:z-10 relative",
                                     !notif.isRead ? "bg-white" : "bg-gray-50/30"
                                 )}
                             >
