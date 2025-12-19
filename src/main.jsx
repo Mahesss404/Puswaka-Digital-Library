@@ -16,7 +16,8 @@ import Profile from './pages/Users/Profile.jsx';
 import Admin from './pages/Admin/Admin';
 import BookCatalog from './pages/Books/BookCatalog';
 import History from './pages/Users/History';
-import Notification from './pages/Users/Notification';
+import Notification from './pages/Users/Notification/Notification';
+import NotificationDetails from './pages/Users/Notification/NotificationDetails';
 
 const router = createBrowserRouter([
     { path: '/',
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
             { path: '/book/:id', element: <BookDetail /> },
             { path: '/catalog', element: <BookCatalog /> },
             { path: '/notification', element: <Notification /> },
+            { path: '/notification/:id', element: <NotificationDetails /> },
             { 
                 path: '/admin', 
                 element: (
