@@ -1,42 +1,33 @@
-import React from "react"
-import { cva } from "class-variance-authority"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { cva } from "class-variance-authority";
 
-const textVariants = cva(
-  "text-foreground",
-  {
-    variants: {
-      size: {
-        default: "text-base",
-        xs: "text-xs",
-        sm: "text-sm",
-        lg: "text-lg font-semibold",
-        xl: "text-xl font-bold",
-        "2xl": "text-2xl font-bold",
-        "3xl": "text-3xl font-bold",
-      },
-      variant: {
-        default: "text-foreground",
-        muted: "text-muted-foreground",
-      }
+const textVariants = cva("text-foreground", {
+  variants: {
+    size: {
+      sm: "text-sm",
+      md: "text-base",
+      lg: "text-lg",
+      xl: "text-xl",
     },
-    defaultVariants: {
-      size: "default",
-      variant: "default",
-    },
-  }
-)
+  },
+  defaultVariants: {
+    size: "md",
+  },
+});
 
-const Text = React.forwardRef(({ className, size, variant, as = "p", ...props }, ref) => {
-  const Comp = as
+const Text = React.forwardRef(({ className, size, as: Component = "p", children, ...props }, ref) => {
   return (
-    <Comp
+    <Component
       ref={ref}
-      className={cn(textVariants({ size, variant, className }))}
+      className={cn(textVariants({ size }), className)}
       {...props}
-    />
-  )
-})
-Text.displayName = "Text"
+    >
+      {children}
+    </Component>
+  );
+});
 
-export { Text, textVariants }
+Text.displayName = "Text";
+
+export { Text, textVariants };

@@ -18,6 +18,10 @@ import BookCatalog from './pages/Books/BookCatalog';
 import History from './pages/Users/History';
 import Notification from './pages/Users/Notification/Notification';
 import NotificationDetails from './pages/Users/Notification/NotificationDetails';
+import Dashboard from './pages/Admin/Dashboard';
+import DashboardBooks from './pages/Admin/Dashboard/Books';
+import DashboardMembers from './pages/Admin/Dashboard/Members';
+import DashboardTransactions from './pages/Admin/Dashboard/Transactions';
 
 const router = createBrowserRouter([
     { path: '/',
@@ -45,12 +49,17 @@ const router = createBrowserRouter([
             { path: '/notification', element: <Notification /> },
             { path: '/notification/:id', element: <NotificationDetails /> },
             { 
-                path: '/admin', 
+                path: '/admin',
                 element: (
                     <AdminProtectedRoute>
-                        <Admin />
+                        <Dashboard />
                     </AdminProtectedRoute>
                 ),
+                children: [
+                    { path: 'books', element: <DashboardBooks /> },
+                    { path: 'members', element: <DashboardMembers /> },
+                    { path: 'transactions', element: <DashboardTransactions /> },
+                ]
             },
         ]
     },

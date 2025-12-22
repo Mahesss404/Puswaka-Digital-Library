@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, User, Tag, FileText, Package, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/Buttons.jsx';
+import { Button } from '@/components/ui/button';
 import { db, auth } from '@/lib/firebase';
 import { doc, getDoc, collection, onSnapshot, addDoc, updateDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Star, AlertCircle, Info, BellRing, ArrowLeft, Calendar, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Header from '@/components/Header';
 import { collection, query, where, getDocs, onSnapshot, doc as firestoreDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
