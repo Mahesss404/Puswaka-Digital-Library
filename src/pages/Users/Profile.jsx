@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Phone, BookOpen, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, BookOpen, ArrowLeft, LogOut } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -148,7 +148,7 @@ const Profile = () => {
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-200">
+                        <div className="pt-4 border-t border-gray-200 flex flex-wrap gap-3">
                             <Link
                                 to="/history"
                                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -156,6 +156,13 @@ const Profile = () => {
                                 <BookOpen className="w-4 h-4 mr-2" />
                                 View Borrowing History
                             </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Log Out
+                            </button>
                         </div>
                     </div>
                 </div>

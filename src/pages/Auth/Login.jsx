@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import React, { useState, useEffect } from "react";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 const Login = () => {
@@ -9,6 +9,28 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [checkingAuth, setCheckingAuth] = useState(true);
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                navigate("/home", { replace: true });
+            } else {
+                setCheckingAuth(false);
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
+
+    // Show loading while checking auth
+    if (checkingAuth) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -36,14 +58,8 @@ const Login = () => {
                 password
             );
 
-            // Get user display name or email
-            const displayName = userCredential.user.displayName || email.split("@")[0];
-
-            // Store auth state in localStorage (matching existing pattern)
-            localStorage.setItem("auth", "true");
-            localStorage.setItem("username", displayName);
-
             // Navigate to home after successful login
+            // Firebase onAuthStateChanged handles session persistence
             navigate("/home");
         } catch (error) {
             console.error("Login error:", error);

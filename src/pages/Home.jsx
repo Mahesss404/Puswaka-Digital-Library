@@ -43,13 +43,8 @@ const Home = () => {
             if (user) {
                 setUserEmail(user.email || "");
                 setUsername(user.displayName || user.email?.split("@")[0] || "");
-                // Store auth state for compatibility
-                localStorage.setItem("auth", "true");
-                localStorage.setItem("username", user.displayName || user.email?.split("@")[0] || "");
             } else {
-                localStorage.removeItem("auth");
-                localStorage.removeItem("username");
-                navigate("/");
+                navigate("/login");
             }
         });
 

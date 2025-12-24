@@ -29,3 +29,7 @@ dist-ssr
 .env.*.local
 
 #Firebase
+
+#bun
+bun.lock
+

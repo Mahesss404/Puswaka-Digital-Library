@@ -13,7 +13,6 @@ import Verification from "./pages/Auth/Verification.jsx";
 import IdCard from "@/pages/Auth/IdCard.jsx";
 import BookDetail from './pages/Books/BookDetail';
 import Profile from './pages/Users/Profile.jsx';
-import Admin from './pages/Admin/Admin';
 import BookCatalog from './pages/Books/BookCatalog';
 import History from './pages/Users/History';
 import Notification from './pages/Users/Notification/Notification';
@@ -24,10 +23,9 @@ import DashboardMembers from './pages/Admin/Dashboard/Members';
 import DashboardTransactions from './pages/Admin/Dashboard/Transactions';
 
 const router = createBrowserRouter([
-    { path: '/',
-        element: (localStorage.getItem("auth")
-                ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />
-        ),
+    { 
+        path: '/',
+        element: <Navigate to="/login" replace />,
     },
     { path: '/login', element: <Login />,},
     { path: '/registration', element: <Registration />,},

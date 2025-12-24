@@ -7,24 +7,24 @@ import { onAuthStateChanged } from "firebase/auth";
 
 // AdminProtectedRoute - Only allows admin users to access
 const AdminProtectedRoute = ({ children }) => {
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const isAuthenticated = localStorage.getItem("auth") === "true";
+    const [authState, setAuthState] = useState({
+        isAuthenticated: null,
+        isAdmin: false,
+        isLoading: true
+    });
 
     useEffect(() => {
-        if (!isAuthenticated) {
-            setIsLoading(false);
-            return;
-        }
-
-        // Check if user is admin
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                setIsAdmin(false);
-                setIsLoading(false);
+                setAuthState({
+                    isAuthenticated: false,
+                    isAdmin: false,
+                    isLoading: false
+                });
                 return;
             }
 
+            // User is authenticated, check if admin
             try {
                 const userEmail = user.email;
 
@@ -35,27 +35,25 @@ const AdminProtectedRoute = ({ children }) => {
                 );
                 const adminSnapshot = await getDocs(adminsQuery);
 
-                if (!adminSnapshot.empty) {
-                    setIsAdmin(true);
-                } else {
-                    setIsAdmin(false);
-                }
+                setAuthState({
+                    isAuthenticated: true,
+                    isAdmin: !adminSnapshot.empty,
+                    isLoading: false
+                });
             } catch (error) {
                 console.error('Error checking admin status:', error);
-                setIsAdmin(false);
-            } finally {
-                setIsLoading(false);
+                setAuthState({
+                    isAuthenticated: true,
+                    isAdmin: false,
+                    isLoading: false
+                });
             }
         });
 
         return () => unsubscribe();
-    }, [isAuthenticated]);
+    }, []);
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
-
-    if (isLoading) {
+    if (authState.isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
@@ -66,7 +64,11 @@ const AdminProtectedRoute = ({ children }) => {
         );
     }
 
-    if (!isAdmin) {
+    if (!authState.isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (!authState.isAdmin) {
         return <Navigate to="/home" replace />;
     }
 
@@ -74,4 +76,3 @@ const AdminProtectedRoute = ({ children }) => {
 };
 
 export default AdminProtectedRoute;
-
