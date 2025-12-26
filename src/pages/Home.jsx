@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {Link, useNavigate} from "react-router-dom";
+import { Helmet } from 'react-helmet-async';
 import Book from '../components/ui/Book.jsx';
 import BookSkeleton from '../components/ui/BookSkeleton.jsx';
 import {
@@ -29,8 +30,7 @@ const Home = () => {
     const menuRef = useRef(null);
     const searchRef = useRef(null);
 
-    const [userEmail, setUserEmail] = useState("");
-    const [memberId, setMemberId] = useState(null);
+    const [userId, setUserId] = useState(null);
     const [borrowedBooks, setBorrowedBooks] = useState([]);
     const [allBooksFromDB, setAllBooksFromDB] = useState([]);
     const [isLoadingBorrows, setIsLoadingBorrows] = useState(true);
@@ -41,8 +41,8 @@ const Home = () => {
         // Listen to auth state changes
         const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
             if (user) {
-                setUserEmail(user.email || "");
-                setUsername(user.displayName || user.email?.split("@")[0] || "");
+                setUserId(user.uid);
+                setUsername(user.displayName || user.email?.split("@")[0] || "User");
             } else {
                 navigate("/login");
             }
@@ -51,118 +51,92 @@ const Home = () => {
         return () => unsubscribeAuth();
     }, [navigate]);
 
-    // Find member by email and listen to borrowed books
+    // Listen to borrowed books using auth UID directly
     useEffect(() => {
-        if (!userEmail) {
+        if (!userId) {
             setIsLoadingBorrows(false);
             return;
         }
         
         setIsLoadingBorrows(true);
 
-        let borrowsUnsubscribe;
-
-        const findMemberAndListenBorrows = async () => {
-            try {
-                // Find member by email
-                const membersQuery = query(
-                    collection(db, 'members'),
-                    where('email', '==', userEmail)
-                );
-                const membersSnapshot = await getDocs(membersQuery);
-
-                if (!membersSnapshot.empty) {
-                    const memberDoc = membersSnapshot.docs[0];
-                    const memberData = { id: memberDoc.id, ...memberDoc.data() };
-                    setMemberId(memberDoc.id);
-
-                    // Listen to active borrows for this member
-                    borrowsUnsubscribe = onSnapshot(
-                        query(
-                            collection(db, 'borrows'),
-                            where('memberId', '==', memberDoc.id),
-                            where('status', '==', 'borrowed')
-                        ),
-                        async (snapshot) => {
-                            setBorrowCount(snapshot.size);
-                            const borrowPromises = snapshot.docs.map(async (doc) => {
-                                const borrowData = doc.data();
-                                
-                                try {
-                                    // Try to get book by ID directly
-                                    const bookRef = firestoreDoc(db, 'books', borrowData.bookId);
-                                    const bookSnapshot = await getDoc(bookRef);
-                                    
-                                    let book;
-                                    if (bookSnapshot.exists()) {
-                                        book = { id: bookSnapshot.id, ...bookSnapshot.data() };
-                                    } else {
-                                        // Fallback: use data from borrow record
-                                        book = {
-                                            id: borrowData.bookId,
-                                            title: borrowData.bookTitle || 'Unknown Book',
-                                            author: 'Unknown Author',
-                                            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"
-                                        };
-                                    }
-
-                                    return {
-                                        id: doc.id,
-                                        ...borrowData,
-                                        book: book,
-                                        borrowDate: borrowData.borrowDate?.toDate ? borrowData.borrowDate.toDate().toISOString() : borrowData.borrowDate,
-                                        dueDate: borrowData.dueDate?.toDate ? borrowData.dueDate.toDate().toISOString() : borrowData.dueDate
-                                    };
-                                } catch (error) {
-                                    console.error('Error fetching book:', error);
-                                    // Return with minimal data
-                                    return {
-                                        id: doc.id,
-                                        ...borrowData,
-                                        book: {
-                                            id: borrowData.bookId,
-                                            title: borrowData.bookTitle || 'Unknown Book',
-                                            author: 'Unknown Author',
-                                            coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"
-                                        },
-                                        borrowDate: borrowData.borrowDate?.toDate ? borrowData.borrowDate.toDate().toISOString() : borrowData.borrowDate,
-                                        dueDate: borrowData.dueDate?.toDate ? borrowData.dueDate.toDate().toISOString() : borrowData.dueDate
-                                    };
-                                }
-                            });
-
-                            const borrows = await Promise.all(borrowPromises);
-                            
-                            // Sort by borrowDate descending
-                            borrows.sort((a, b) => {
-                                const dateA = a.borrowDate ? new Date(a.borrowDate) : new Date(0);
-                                const dateB = b.borrowDate ? new Date(b.borrowDate) : new Date(0);
-                                return dateB - dateA;
-                            });
-                            
-                            setBorrowedBooks(borrows);
-                            setIsLoadingBorrows(false);
-                        },
-                        (error) => {
-                            console.error('Error listening to borrows:', error);
-                            setIsLoadingBorrows(false);
+        // Listen to active borrows for this user using their auth UID
+        const borrowsUnsubscribe = onSnapshot(
+            query(
+                collection(db, 'borrows'),
+                where('userId', '==', userId),
+                where('status', '==', 'borrowed')
+            ),
+            async (snapshot) => {
+                setBorrowCount(snapshot.size);
+                const borrowPromises = snapshot.docs.map(async (doc) => {
+                    const borrowData = doc.data();
+                    
+                    try {
+                        // Try to get book by ID directly
+                        const bookRef = firestoreDoc(db, 'books', borrowData.bookId);
+                        const bookSnapshot = await getDoc(bookRef);
+                        
+                        let book;
+                        if (bookSnapshot.exists()) {
+                            book = { id: bookSnapshot.id, ...bookSnapshot.data() };
+                        } else {
+                            // Fallback: use data from borrow record
+                            book = {
+                                id: borrowData.bookId,
+                                title: borrowData.bookTitle || 'Unknown Book',
+                                author: 'Unknown Author',
+                                coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"
+                            };
                         }
-                    );
-                } else {
-                    setIsLoadingBorrows(false);
-                }
-            } catch (error) {
-                console.error('Error finding member:', error);
+
+                        return {
+                            id: doc.id,
+                            ...borrowData,
+                            book: book,
+                            borrowDate: borrowData.borrowDate?.toDate ? borrowData.borrowDate.toDate().toISOString() : borrowData.borrowDate,
+                            dueDate: borrowData.dueDate?.toDate ? borrowData.dueDate.toDate().toISOString() : borrowData.dueDate
+                        };
+                    } catch (error) {
+                        console.error('Error fetching book:', error);
+                        // Return with minimal data
+                        return {
+                            id: doc.id,
+                            ...borrowData,
+                            book: {
+                                id: borrowData.bookId,
+                                title: borrowData.bookTitle || 'Unknown Book',
+                                author: 'Unknown Author',
+                                coverSrc: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"
+                            },
+                            borrowDate: borrowData.borrowDate?.toDate ? borrowData.borrowDate.toDate().toISOString() : borrowData.borrowDate,
+                            dueDate: borrowData.dueDate?.toDate ? borrowData.dueDate.toDate().toISOString() : borrowData.dueDate
+                        };
+                    }
+                });
+
+                const borrows = await Promise.all(borrowPromises);
+                
+                // Sort by borrowDate descending
+                borrows.sort((a, b) => {
+                    const dateA = a.borrowDate ? new Date(a.borrowDate) : new Date(0);
+                    const dateB = b.borrowDate ? new Date(b.borrowDate) : new Date(0);
+                    return dateB - dateA;
+                });
+                
+                setBorrowedBooks(borrows);
+                setIsLoadingBorrows(false);
+            },
+            (error) => {
+                console.error('Error listening to borrows:', error);
                 setIsLoadingBorrows(false);
             }
-        };
-
-        findMemberAndListenBorrows();
+        );
 
         return () => {
-            if (borrowsUnsubscribe) borrowsUnsubscribe();
+            borrowsUnsubscribe();
         };
-    }, [userEmail]);
+    }, [userId]);
 
     // Load books from Firestore
     useEffect(() => {
@@ -379,216 +353,353 @@ const Home = () => {
         navigate('/catalog', { state: { books } });
     };
 
+    // Format due date for machine-readable format
+    const formatDateISO = (dateString) => {
+        try {
+            return new Date(dateString).toISOString();
+        } catch {
+            return '';
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-white">
-            {/* Top Navigation Bar */}
-            <Header/>
+        <>
+            {/* SEO Meta Tags */}
+            <Helmet>
+                <title>Home - Puswaka Digital Library | Discover & Borrow Books</title>
+                <meta 
+                    name="description" 
+                    content="Welcome to Puswaka Digital Library. Browse, discover, and borrow books from our extensive collection. Explore categories like mental health, physical wellness, emotional resilience, and nutrition." 
+                />
+                <meta 
+                    name="keywords" 
+                    content="digital library, books, borrow books, ebooks, reading, mental health, wellness, self-development, psychology" 
+                />
+                <meta property="og:title" content="Puswaka Digital Library - Your Gateway to Knowledge" />
+                <meta property="og:description" content="Discover and borrow books from our extensive digital collection. Join Puswaka today!" />
+                <meta property="og:type" content="website" />
+                <link rel="canonical" href="/home" />
+            </Helmet>
 
-            {/* Main Content */}
-            <div className="p-4 lg:p-8 flex flex-col gap-4">
-                {/* Hero Carousel Section - Blue Background */}
-                <div className="bg-primary rounded-2xl px-4 sm:px-6 py-6 sm:py-8">
-                    <div className="max-w-7xl mx-auto">
-                        <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
-                            Selamat datang, {username} 👋
-                        </h2>
-                        
-                        {/* Borrowed Books Section */}
-                        <div className="relative">
-                            <div 
-                                ref={carouselRef}
-                                className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory "
-                                onScroll={(e) => {
-                                    const scrollLeft = e.target.scrollLeft;
-                                    const itemWidth = 163; // book width (147) + gap (16)
-                                    const newIndex = Math.min(Math.round(scrollLeft / itemWidth), borrowedBooks.length - 1);
-                                    if (newIndex >= 0 && newIndex !== currentCarouselIndex) {
-                                        setCurrentCarouselIndex(newIndex);
-                                    }
-                                }}
-                            >
-                                {isLoadingBorrows ? (
-                                    <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
-                                        {[...Array(borrowCount > 0 ? borrowCount : 3)].map((_, index) => (
-                                            <div key={index} className="flex-shrink-0 w-[180px] sm:w-[200px]">
-                                                <BookSkeleton className="w-full" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : borrowedBooks.length > 0 ? (
-                            <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
-                                {borrowedBooks.map((borrow) => (
-                                    <div key={borrow.id} className="flex-shrink-0">
-                                        <Book
-                                            id={borrow.book?.id || borrow.bookId}
-                                            coverSrc={borrow.book?.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"}
-                                            title={borrow.book?.title || borrow.bookTitle || "Unknown Book"}
-                                            author={borrow.book?.author || "Unknown Author"}
-                                            category={borrow.book?.category || borrow.book?.genre || "General"}
-                                            className="snap-start w-[180px] sm:w-[200px]"
-                                            onClick={handleBookClick}
-                                            showStatusOverlay={false}
-                                        />
-                                        <div className="mt-1 space-y-0.5">
-                                            <p className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                Due: {borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString() : 'N/A'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            
-                            ) : (
-                                <p className="text-white text-sm sm:text-base">No borrowed books at the moment.</p>
-                            )}
+            <main className="min-h-screen bg-background" role="main">
+                {/* Header Navigation */}
+                <Header />
 
-                            </div>
+                {/* Main Content Container */}
+                <article className="p-4 lg:p-8 flex flex-col gap-4">
+                    
+                    {/* Hero Section - User Welcome & Borrowed Books */}
+                    <section 
+                        className="bg-primary rounded-2xl px-4 sm:px-6 py-6 sm:py-8"
+                        aria-labelledby="welcome-heading"
+                    >
+                        <div className="max-w-7xl mx-auto">
+                            <header>
+                                <h1 
+                                    id="welcome-heading" 
+                                    className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6"
+                                >
+                                    Selamat datang, {username} 👋
+                                </h1>
+                            </header>
                             
-                            {/* Carousel Indicators */}
-                            <div className="flex justify-center gap-2 mt-4">
-                                {borrowedBooks.map((_, index) => (
-                                    <button
-                                        key={index}
-                                        onClick={() => {
-                                            setCurrentCarouselIndex(index);
-                                            if (carouselRef.current) {
-                                                const itemWidth = 163;
-                                                carouselRef.current.scrollTo({ left: index * itemWidth, behavior: 'smooth' });
+                            {/* Currently Borrowed Books Carousel */}
+                            <section aria-labelledby="borrowed-books-heading">
+                                <h2 id="borrowed-books-heading" className="sr-only">
+                                    Your Borrowed Books
+                                </h2>
+                                
+                                <div className="relative">
+                                    <div 
+                                        ref={carouselRef}
+                                        className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory"
+                                        role="region"
+                                        aria-label="Borrowed books carousel"
+                                        onScroll={(e) => {
+                                            const scrollLeft = e.target.scrollLeft;
+                                            const itemWidth = 163;
+                                            const newIndex = Math.min(Math.round(scrollLeft / itemWidth), borrowedBooks.length - 1);
+                                            if (newIndex >= 0 && newIndex !== currentCarouselIndex) {
+                                                setCurrentCarouselIndex(newIndex);
                                             }
                                         }}
-                                        className={`h-1.5 rounded-full transition-all ${
-                                            index === currentCarouselIndex
-                                                ? 'w-8 bg-white'
-                                                : 'w-2 bg-white/50'
-                                        }`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Explore by Genre Section */}
-                <div className="bg-white">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex items-center justify-between mb-4 sm:mb-6">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Explore by Category</h3>
-                            <button className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-                                See all
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-                        </div>
-                        
-                        <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide py-2">
-                            {genres.map((genre) => {
-                                const IconComponent = genre.icon;
-                                return (
-                                    <button
-                                        key={genre.id}
-                                        onClick={() => handleGenreClick(genre.name)}
-                                        className={`flex-shrink-0 flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl ring-1 ring-black/5 text-red-500 bg-gray-800 hover:opacity-90 transition-opacity min-w-[120px] sm:min-w-[140px] ${
-                                            selectedGenre === genre.name ? 'ring-2 ring-blue-600 ring-offset-2' : ''
-                                        }`}
                                     >
-                                        <IconComponent className="w-8 h-8 sm:w-10 sm:h-10 text-white mb-2" />
-                                        <span className="text-white text-xs sm:text-sm font-medium text-center">
-                                            {genre.name}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Recommendation For You Section */}
-                <div className="bg-white">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex items-center justify-between mb-4 sm:mb-6">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">Recommendation For You</h3>
-                            <Link 
-                                to="/catalog"
-                                // onClick={() => handleSeeAllClick(recommendationBooks)}
-                                className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                            >
-                                See all
-                                <ChevronRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                        
-                        <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide">
-                            {isLoadingBooks ? (
-                                [...Array(10)].map((_, index) => (
-                                    <BookSkeleton 
-                                        key={index} 
-                                        className="snap-start min-w-[160px] max-w-[160px]" 
-                                    />
-                                ))
-                            ) : (
-                                recommendationBooks.map((book) => (
-                                    <Book
-                                        key={book.id}
-                                        id={book.id}
-                                        coverSrc={book.coverSrc}
-                                        title={book.title}
-                                        author={book.author}
-                                        category={book.category || book.genre}
-                                        textColor="text-gray-900"
-                                        className="snap-start min-w-[160px] max-w-[160px]"
-                                        available={book.available}
-                                        onClick={handleBookClick}
-                                    />
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-
-                {/* Search Results Section - Show when searching */}
-                {searchQuery.trim() && (
-                    <div className="px-4 sm:px-6 py-6 sm:py-8 bg-white border-t border-gray-200">
-                        <div className="max-w-7xl mx-auto">
-                            <div className="flex items-center justify-between mb-4 sm:mb-6">
-                                <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-                                    Search Results for "{searchQuery}"
-                                </h3>
-                                <button 
-                                    onClick={handleClearSearch}
-                                    className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                                >
-                                    Clear
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                            
-                            {searchResults.length > 0 ? (
-                                <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2">
-                                    {searchResults.map((book) => (
-                                        <Book
-                                            key={book.id}
-                                            id={book.id}
-                                            coverSrc={book.coverSrc}
-                                            title={book.title}
-                                            author={book.author}
-                                            category={book.category || book.genre}
-                                            textColor="text-gray-900"
-                                            className="snap-start"
-                                            onClick={handleBookClick}
-                                        />
-                                    ))}
+                                        {isLoadingBorrows ? (
+                                            <div 
+                                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2"
+                                                aria-busy="true"
+                                                aria-label="Loading borrowed books"
+                                            >
+                                                {[...Array(borrowCount > 0 ? borrowCount : 3)].map((_, index) => (
+                                                    <div key={index} className="flex-shrink-0 w-[180px] sm:w-[200px]">
+                                                        <BookSkeleton className="w-full" aria-hidden="true" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : borrowedBooks.length > 0 ? (
+                                            <ul 
+                                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 list-none p-0 m-0"
+                                                role="list"
+                                                aria-label="List of borrowed books"
+                                            >
+                                                {borrowedBooks.map((borrow, index) => (
+                                                    <li 
+                                                        key={borrow.id} 
+                                                        className="flex-shrink-0"
+                                                        aria-setsize={borrowedBooks.length}
+                                                        aria-posinset={index + 1}
+                                                    >
+                                                        <figure className="m-0">
+                                                            <Book
+                                                                id={borrow.book?.id || borrow.bookId}
+                                                                coverSrc={borrow.book?.coverSrc || "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg"}
+                                                                title={borrow.book?.title || borrow.bookTitle || "Unknown Book"}
+                                                                author={borrow.book?.author || "Unknown Author"}
+                                                                category={borrow.book?.category || borrow.book?.genre || "General"}
+                                                                className="snap-start w-[180px] sm:w-[200px]"
+                                                                onClick={handleBookClick}
+                                                                showStatusOverlay={false}
+                                                            />
+                                                            <figcaption className="mt-1 space-y-0.5">
+                                                                <time 
+                                                                    dateTime={formatDateISO(borrow.dueDate)}
+                                                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                                >
+                                                                    Due: {borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString() : 'N/A'}
+                                                                </time>
+                                                            </figcaption>
+                                                        </figure>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-white text-sm sm:text-base" role="status">
+                                                No borrowed books at the moment.
+                                            </p>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Carousel Navigation Indicators */}
+                                    {borrowedBooks.length > 0 && (
+                                        <nav 
+                                            className="flex justify-center gap-2 mt-4"
+                                            aria-label="Carousel navigation"
+                                        >
+                                            {borrowedBooks.map((_, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => {
+                                                        setCurrentCarouselIndex(index);
+                                                        if (carouselRef.current) {
+                                                            const itemWidth = 163;
+                                                            carouselRef.current.scrollTo({ left: index * itemWidth, behavior: 'smooth' });
+                                                        }
+                                                    }}
+                                                    className={`h-1.5 rounded-full transition-all ${
+                                                        index === currentCarouselIndex
+                                                            ? 'w-8 bg-white'
+                                                            : 'w-2 bg-white/50'
+                                                    }`}
+                                                    aria-label={`Go to book ${index + 1}`}
+                                                    aria-current={index === currentCarouselIndex ? 'true' : undefined}
+                                                />
+                                            ))}
+                                        </nav>
+                                    )}
                                 </div>
-                            ) : (
-                                <p className="text-gray-500 text-sm sm:text-base text-center py-4">
-                                    No books found matching "{searchQuery}"
-                                </p>
-                            )}
+                            </section>
                         </div>
-                    </div>
-                )}
-            </div>
-        </div>
+                    </section>
+
+                    {/* Explore by Category Section */}
+                    <section 
+                        className="bg-white"
+                        aria-labelledby="categories-heading"
+                    >
+                        <div className="max-w-7xl mx-auto">
+                            <header className="flex items-center justify-between mb-4 sm:mb-6">
+                                <h2 
+                                    id="categories-heading" 
+                                    className="text-lg sm:text-xl font-bold text-gray-900"
+                                >
+                                    Explore by Category
+                                </h2>
+                                <Link 
+                                    to="/catalog"
+                                    className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                                    aria-label="See all book categories"
+                                >
+                                    See all
+                                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                                </Link>
+                            </header>
+                            
+                            <nav 
+                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide py-2"
+                                aria-label="Book categories"
+                                role="navigation"
+                            >
+                                {genres.map((genre) => {
+                                    const IconComponent = genre.icon;
+                                    const isSelected = selectedGenre === genre.name;
+                                    
+                                    return (
+                                        <button
+                                            key={genre.id}
+                                            onClick={() => handleGenreClick(genre.name)}
+                                            className={`flex-shrink-0 flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl ring-1 ring-black/5 text-red-500 bg-gray-800 hover:opacity-90 transition-opacity min-w-[120px] sm:min-w-[140px] ${
+                                                isSelected ? 'ring-2 ring-blue-600 ring-offset-2' : ''
+                                            }`}
+                                            aria-pressed={isSelected}
+                                            aria-label={`Filter by ${genre.name} category`}
+                                        >
+                                            <IconComponent 
+                                                className="w-8 h-8 sm:w-10 sm:h-10 text-white mb-2" 
+                                                aria-hidden="true" 
+                                            />
+                                            <span className="text-white text-xs sm:text-sm font-medium text-center">
+                                                {genre.name}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+                    </section>
+
+                    {/* Book Recommendations Section */}
+                    <section 
+                        className="bg-white"
+                        aria-labelledby="recommendations-heading"
+                    >
+                        <div className="max-w-7xl mx-auto">
+                            <header className="flex items-center justify-between mb-4 sm:mb-6">
+                                <h2 
+                                    id="recommendations-heading" 
+                                    className="text-lg sm:text-xl font-bold text-gray-900"
+                                >
+                                    Recommendation For You
+                                </h2>
+                                <Link 
+                                    to="/catalog"
+                                    className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                                    aria-label="View all book recommendations in catalog"
+                                >
+                                    See all
+                                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                                </Link>
+                            </header>
+                            
+                            <div 
+                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide"
+                                role="region"
+                                aria-label="Book recommendations"
+                            >
+                                {isLoadingBooks ? (
+                                    [...Array(10)].map((_, index) => (
+                                        <BookSkeleton 
+                                            key={index} 
+                                            className="snap-start min-w-[160px] max-w-[160px]"
+                                            aria-hidden="true"
+                                        />
+                                    ))
+                                ) : (
+                                    <ul 
+                                        className="flex gap-3 sm:gap-4 list-none p-0 m-0"
+                                        role="list"
+                                        aria-label="List of recommended books"
+                                    >
+                                        {recommendationBooks.map((book, index) => (
+                                            <li 
+                                                key={book.id}
+                                                aria-setsize={recommendationBooks.length}
+                                                aria-posinset={index + 1}
+                                            >
+                                                <article className="snap-start min-w-[160px] max-w-[160px]">
+                                                    <Book
+                                                        id={book.id}
+                                                        coverSrc={book.coverSrc}
+                                                        title={book.title}
+                                                        author={book.author}
+                                                        category={book.category || book.genre}
+                                                        textColor="text-gray-900"
+                                                        available={book.available}
+                                                        onClick={handleBookClick}
+                                                    />
+                                                </article>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Search Results Section - Conditional Render */}
+                    {searchQuery.trim() && (
+                        <section 
+                            className="px-4 sm:px-6 py-6 sm:py-8 bg-white border-t border-gray-200"
+                            aria-labelledby="search-results-heading"
+                            aria-live="polite"
+                        >
+                            <div className="max-w-7xl mx-auto">
+                                <header className="flex items-center justify-between mb-4 sm:mb-6">
+                                    <h2 
+                                        id="search-results-heading" 
+                                        className="text-lg sm:text-xl font-bold text-gray-900"
+                                    >
+                                        Search Results for "{searchQuery}"
+                                    </h2>
+                                    <button 
+                                        onClick={handleClearSearch}
+                                        className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                                        aria-label="Clear search results"
+                                    >
+                                        Clear
+                                        <X className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                </header>
+                                
+                                {searchResults.length > 0 ? (
+                                    <ul 
+                                        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 list-none p-0 m-0"
+                                        role="list"
+                                        aria-label="Search results"
+                                    >
+                                        {searchResults.map((book, index) => (
+                                            <li 
+                                                key={book.id}
+                                                aria-setsize={searchResults.length}
+                                                aria-posinset={index + 1}
+                                            >
+                                                <article className="snap-start">
+                                                    <Book
+                                                        id={book.id}
+                                                        coverSrc={book.coverSrc}
+                                                        title={book.title}
+                                                        author={book.author}
+                                                        category={book.category || book.genre}
+                                                        textColor="text-gray-900"
+                                                        onClick={handleBookClick}
+                                                    />
+                                                </article>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p 
+                                        className="text-gray-500 text-sm sm:text-base text-center py-4"
+                                        role="status"
+                                    >
+                                        No books found matching "{searchQuery}"
+                                    </p>
+                                )}
+                            </div>
+                        </section>
+                    )}
+                </article>
+            </main>
+        </>
     );
 };
 

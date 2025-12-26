@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.jsx'
 import {createBrowserRouter, Navigate, RouterProvider, Outlet} from "react-router-dom";
@@ -10,7 +11,6 @@ import Registration from "./pages/Auth/Registration.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
 import Verification from "./pages/Auth/Verification.jsx";
-import IdCard from "@/pages/Auth/IdCard.jsx";
 import BookDetail from './pages/Books/BookDetail';
 import Profile from './pages/Users/Profile.jsx';
 import BookCatalog from './pages/Books/BookCatalog';
@@ -30,7 +30,6 @@ const router = createBrowserRouter([
     { path: '/login', element: <Login />,},
     { path: '/registration', element: <Registration />,},
     { path: '/verification', element: <Verification />,},
-    { path: '/idcard', element: <IdCard />,},
     {
         element: (
             <ProtectedRoute>
@@ -66,6 +65,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <HelmetProvider>
       <RouterProvider router={router}/>
+    </HelmetProvider>
   </StrictMode>,
 )
