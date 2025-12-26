@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RecaptchaVerifier, signInWithPhoneNumber, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -9,16 +9,21 @@ import { AlertCircle, Phone } from 'lucide-react';
 const Verification = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const recaptchaContainerRef = useRef(null);
+    const recaptchaInitialized = useRef(false);
     
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [otpSent, setOtpSent] = useState(false);
     const [resending, setResending] = useState(false);
     const [recaptchaReady, setRecaptchaReady] = useState(false);
+    const [mounted, setMounted] = useState(false);
     
-    // Get data from navigation state or localStorage
+    // Get data from navigation state or localStorage - use refs to persist across renders
     const signupData = location.state?.signupData || JSON.parse(localStorage.getItem("signupData") || "{}");
     const phoneNumber = location.state?.phoneNumber || signupData?.phoneNumber || "";
+    const mode = location.state?.mode || "registration"; // "registration" or "login"
+    const userData = location.state?.userData || null; // For login mode
     
     // Format phone number for Firebase (needs +62 format for Indonesian numbers)
     const formatPhoneForFirebase = (phone) => {
@@ -32,14 +37,8 @@ const Verification = () => {
         return '+' + cleaned;
     };
     
-    // Setup reCAPTCHA on mount
-    useEffect(() => {
-        if (!phoneNumber) {
-            navigate('/idcard', { replace: true });
-            return;
-        }
-        
-        // Clear any existing recaptcha
+    // Clear existing reCAPTCHA
+    const clearRecaptcha = useCallback(() => {
         if (window.recaptchaVerifier) {
             try {
                 window.recaptchaVerifier.clear();
@@ -48,9 +47,31 @@ const Verification = () => {
             }
             window.recaptchaVerifier = null;
         }
+        if (window.recaptchaWidgetId !== undefined) {
+            window.recaptchaWidgetId = undefined;
+        }
+        recaptchaInitialized.current = false;
+    }, []);
+    
+    // Initialize reCAPTCHA
+    const initRecaptcha = useCallback(() => {
+        if (recaptchaInitialized.current) {
+            console.log('reCAPTCHA already initialized');
+            return;
+        }
         
-        // Create new reCAPTCHA verifier - stored on window as per Firebase docs
+        const container = document.getElementById('recaptcha-container');
+        if (!container) {
+            console.log('reCAPTCHA container not found, waiting...');
+            return;
+        }
+        
+        // Clear any existing reCAPTCHA first
+        clearRecaptcha();
+        
         try {
+            console.log('Initializing reCAPTCHA for mode:', mode);
+            
             window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
                 'size': 'normal',
                 'callback': (response) => {
@@ -68,28 +89,49 @@ const Verification = () => {
             // Render the reCAPTCHA
             window.recaptchaVerifier.render().then((widgetId) => {
                 window.recaptchaWidgetId = widgetId;
-                console.log('reCAPTCHA rendered, widgetId:', widgetId);
+                recaptchaInitialized.current = true;
+                console.log('reCAPTCHA rendered successfully, widgetId:', widgetId);
             }).catch((err) => {
                 console.error('Error rendering reCAPTCHA:', err);
                 setError("Failed to load reCAPTCHA. Please refresh the page.");
+                recaptchaInitialized.current = false;
             });
         } catch (err) {
             console.error('Error creating reCAPTCHA:', err);
             setError("Failed to initialize verification. Please refresh the page.");
+            recaptchaInitialized.current = false;
         }
+    }, [mode, clearRecaptcha]);
+    
+    // Mount effect
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+    
+    // Redirect if no phone number
+    useEffect(() => {
+        if (!phoneNumber && mounted) {
+            console.log('No phone number, redirecting to:', mode === 'login' ? '/login' : '/registration');
+            navigate(mode === 'login' ? '/login' : '/registration', { replace: true });
+        }
+    }, [phoneNumber, navigate, mode, mounted]);
+    
+    // Setup reCAPTCHA after mount
+    useEffect(() => {
+        if (!phoneNumber || !mounted) return;
+        
+        // Small delay to ensure DOM is ready
+        const timer = setTimeout(() => {
+            initRecaptcha();
+        }, 100);
         
         // Cleanup on unmount
         return () => {
-            if (window.recaptchaVerifier) {
-                try {
-                    window.recaptchaVerifier.clear();
-                    window.recaptchaVerifier = null;
-                } catch (e) {
-                    console.log('Cleanup recaptcha:', e);
-                }
-            }
+            clearTimeout(timer);
+            clearRecaptcha();
         };
-    }, [phoneNumber, navigate]);
+    }, [phoneNumber, mounted, initRecaptcha, clearRecaptcha]);
     
     // Send OTP function
     const sendOTP = useCallback(async () => {
@@ -108,7 +150,7 @@ const Verification = () => {
         
         try {
             const formattedPhone = formatPhoneForFirebase(phoneNumber);
-            console.log('Sending OTP to:', formattedPhone);
+            console.log('Sending OTP to:', formattedPhone, 'Mode:', mode);
             
             const confirmationResult = await signInWithPhoneNumber(
                 auth, 
@@ -152,7 +194,7 @@ const Verification = () => {
         } finally {
             setLoading(false);
         }
-    }, [phoneNumber]);
+    }, [phoneNumber, mode]);
     
     // Resend OTP
     const handleResendOTP = async () => {
@@ -187,38 +229,55 @@ const Verification = () => {
             const result = await window.confirmationResult.confirm(code);
             console.log('OTP verified successfully:', result.user);
             
-            // Update user profile with name from ID card
-            if (signupData?.name) {
-                await updateProfile(result.user, {
-                    displayName: signupData.name
-                });
+            if (mode === 'registration') {
+                // REGISTRATION MODE: Create new user profile
+                
+                // Update user profile with name from ID card
+                if (signupData?.name) {
+                    await updateProfile(result.user, {
+                        displayName: signupData.name
+                    });
+                }
+                
+                // Store user data in Firestore users collection
+                const newUserData = {
+                    uid: result.user.uid,
+                    name: signupData?.name || "",
+                    address: signupData?.address || "",
+                    idNumber: signupData?.idNumber || "",
+                    phoneNumber: phoneNumber,
+                    password: signupData?.password || "", // Store password for login
+                    createdAt: serverTimestamp()
+                };
+                
+                // Save to Firestore
+                await setDoc(doc(db, "users", result.user.uid), newUserData);
+                console.log('User data saved to Firestore:', newUserData);
+                
+                // Also keep a copy in localStorage for quick access
+                localStorage.setItem("userData", JSON.stringify({
+                    ...newUserData,
+                    createdAt: new Date().toISOString()
+                }));
+                
+                // Clear signup data from localStorage
+                localStorage.removeItem("signupData");
+                localStorage.removeItem("idCardData");
+                
+                console.log('User registered successfully:', newUserData);
+                
+            } else {
+                // LOGIN MODE: User already exists, just update localStorage
+                
+                if (userData) {
+                    localStorage.setItem("userData", JSON.stringify({
+                        ...userData,
+                        lastLogin: new Date().toISOString()
+                    }));
+                }
+                
+                console.log('User logged in successfully:', userData);
             }
-            
-            // Store user data in Firestore users collection
-            const userData = {
-                uid: result.user.uid,
-                name: signupData?.name || "",
-                address: signupData?.address || "",
-                idNumber: signupData?.idNumber || "",
-                phoneNumber: phoneNumber,
-                createdAt: serverTimestamp()
-            };
-            
-            // Save to Firestore
-            await setDoc(doc(db, "users", result.user.uid), userData);
-            console.log('User data saved to Firestore:', userData);
-            
-            // Also keep a copy in localStorage for quick access
-            localStorage.setItem("userData", JSON.stringify({
-                ...userData,
-                createdAt: new Date().toISOString()
-            }));
-            
-            // Clear signup data from localStorage
-            localStorage.removeItem("signupData");
-            localStorage.removeItem("idCardData");
-            
-            console.log('User registered successfully:', userData);
             
             // Navigate to home
             navigate('/home', { replace: true });
@@ -242,34 +301,51 @@ const Verification = () => {
         }
     };
     
-    // Redirect if no phone number
+    // Don't render if no phone number
     if (!phoneNumber) {
-        return null;
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
     }
     
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
             <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-                {/* Progress Steps */}
-                <div className="flex items-center justify-center mb-6">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 text-white">
-                        ✓
+                {/* Progress Steps - Only show for registration */}
+                {mode === 'registration' && (
+                    <div className="flex items-center justify-center mb-6">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 text-white">
+                            ✓
+                        </div>
+                        <div className="w-16 h-1 mx-2 bg-green-500"></div>
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 text-white">
+                            ✓
+                        </div>
+                        <div className="w-16 h-1 mx-2 bg-blue-500"></div>
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white">
+                            3
+                        </div>
                     </div>
-                    <div className="w-16 h-1 mx-2 bg-green-500"></div>
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 text-white">
-                        ✓
+                )}
+                
+                {/* Login mode indicator */}
+                {mode === 'login' && (
+                    <div className="flex items-center justify-center mb-4">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                            Login Verification
+                        </span>
                     </div>
-                    <div className="w-16 h-1 mx-2 bg-blue-500"></div>
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white">
-                        3
-                    </div>
-                </div>
+                )}
                 
                 <div className="text-center mb-6">
                     <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full">
                         <Phone className="w-8 h-8 text-blue-500" />
                     </div>
-                    <h2 className="text-2xl font-bold mb-2">Verify Your Phone</h2>
+                    <h2 className="text-2xl font-bold mb-2">
+                        {mode === 'login' ? 'Verifikasi Login' : 'Verify Your Phone'}
+                    </h2>
                     <p className="text-gray-500 text-sm">
                         {otpSent ? "Enter the verification code sent to" : "We'll send a verification code to"}
                     </p>
@@ -292,7 +368,11 @@ const Verification = () => {
                         <p className="text-sm text-gray-500">Please complete the reCAPTCHA to continue:</p>
                         
                         {/* reCAPTCHA Container */}
-                        <div id="recaptcha-container" className="flex justify-center"></div>
+                        <div 
+                            id="recaptcha-container" 
+                            ref={recaptchaContainerRef}
+                            className="flex justify-center min-h-[78px]"
+                        ></div>
                         
                         {/* Send OTP Button */}
                         <button
@@ -327,13 +407,13 @@ const Verification = () => {
                     />
                 )}
                 
-                {/* Back to signup */}
+                {/* Back link */}
                 <div className="mt-6 text-center">
                     <button
-                        onClick={() => navigate('/idcard')}
+                        onClick={() => navigate(mode === 'login' ? '/login' : '/registration')}
                         className="text-sm text-gray-500 hover:text-gray-700 underline"
                     >
-                        ← Back to signup
+                        ← {mode === 'login' ? 'Back to login' : 'Back to signup'}
                     </button>
                 </div>
             </div>
