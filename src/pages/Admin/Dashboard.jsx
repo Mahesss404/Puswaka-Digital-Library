@@ -67,7 +67,7 @@ const chartData = [
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
-    members: { total: 0, new: 0, active: 0 },
+    users: { total: 0, new: 0, active: 0 },
     books: { total: 0, available: 0, outOfStock: 0 },
     borrows: { thisWeek: 0, returnedThisWeek: 0, overdueThisWeek: 0 }
   });
@@ -94,7 +94,7 @@ export default function Dashboard() {
   const sidebarNavItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
     { name: 'Books', icon: BookOpen, path: '/admin/books' },
-    { name: 'Members', icon: Users, path: '/admin/members' },
+    { name: 'Users', icon: Users, path: '/admin/members' },
     { name: 'Transactions', icon: Receipt, path: '/admin/transactions' },
   ];
   
@@ -109,8 +109,8 @@ export default function Dashboard() {
   const refreshData = async () => {
       setLoading(true);
       try {
-        const [membersSnap, booksSnap, borrowsSnap] = await Promise.all([
-          getDocs(collection(db, 'members')),
+        const [usersSnap, booksSnap, borrowsSnap] = await Promise.all([
+          getDocs(collection(db, 'users')),
           getDocs(collection(db, 'books')),
           getDocs(collection(db, 'borrows'))
         ]);
@@ -119,9 +119,9 @@ export default function Dashboard() {
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
         // Create Maps for Join
-        const membersMap = {};
-        membersSnap.forEach(doc => {
-            membersMap[doc.id] = { ...doc.data(), id: doc.id };
+        const usersMap = {};
+        usersSnap.forEach(doc => {
+            usersMap[doc.id] = { ...doc.data(), id: doc.id };
         });
 
         const booksMap = {};
@@ -129,14 +129,14 @@ export default function Dashboard() {
             booksMap[doc.id] = { ...doc.data(), id: doc.id };
         });
 
-        // Process Members
-        const totalMembers = membersSnap.size;
-        let newMembers = 0;
-        const activeMemberIds = new Set();
+        // Process Users
+        const totalUsers = usersSnap.size;
+        let newUsers = 0;
+        const activeUserIds = new Set();
         
-        Object.values(membersMap).forEach(data => {
-          const joined = data.joinedAt?.toDate ? data.joinedAt.toDate() : (data.joinedAt ? new Date(data.joinedAt) : null);
-          if (joined && joined > oneWeekAgo) newMembers++;
+        Object.values(usersMap).forEach(data => {
+          const joined = data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : null);
+          if (joined && joined > oneWeekAgo) newUsers++;
         });
 
         // Process Books
@@ -167,12 +167,12 @@ export default function Dashboard() {
           if (borrowDate && borrowDate > oneWeekAgo) borrowsThisWeek++;
           if (data.status === 'returned' && returnDate && returnDate > oneWeekAgo) returnedThisWeek++;
           if (data.status === 'borrowed' && dueDate && dueDate > oneWeekAgo && dueDate < now) overdueThisWeek++;
-          if (data.status === 'borrowed' && data.memberId) activeMemberIds.add(data.memberId);
+          if (data.status === 'borrowed' && data.userId) activeUserIds.add(data.userId);
 
           // Join Data
-          const member = membersMap[data.memberId] || { name: 'Unknown', email: '', membershipId: 'N/A' };
+          const user = usersMap[data.userId] || { name: 'Unknown', email: '', idNumber: 'N/A' };
           const book = booksMap[data.bookId] || { title: 'Unknown Book' };
-            console.log(member)
+            console.log(user)
 
           const {penalty,daysOverdue} = calculateFine (data,dueDate,now);
 
@@ -182,13 +182,13 @@ export default function Dashboard() {
               borrowDate,
               returnDate,
               dueDate,
-              member,
+              user,
               book,
               penalty,
               daysOverdue,
-              memberName: member.name || 'Unknown',
-              memberEmail: member.email || '',
-              membershipId: member.membershipId || 'N/A'
+              userName: user.name || 'Unknown',
+              userEmail: user.email || user.phoneNumber || '',
+              userIdNumber: user.idNumber || 'N/A'
           };
 
           allTransactions.push(transaction);
@@ -201,10 +201,10 @@ export default function Dashboard() {
         // Sort transactions by date (newest first)
         allTransactions.sort((a, b) => (b.borrowDate || 0) - (a.borrowDate || 0));
 
-        const activeMembers = activeMemberIds.size;
+        const activeUsers = activeUserIds.size;
 
         setStats({
-          members: { total: totalMembers, new: newMembers, active: activeMembers },
+          users: { total: totalUsers, new: newUsers, active: activeUsers },
           books: { total: totalBooks, available: availableBooks, outOfStock: outOfStockBooks },
           borrows: { thisWeek: borrowsThisWeek, returnedThisWeek: returnedThisWeek, overdueThisWeek: overdueThisWeek }
         });
@@ -322,23 +322,23 @@ export default function Dashboard() {
       <>
       {/* Stats Cards Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        {/* Card 1: Members */}
+        {/* Card 1: Users */}
         <div className="rounded-xl border bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-neutral-500">Total Members</h3>
+            <h3 className="text-sm font-medium text-neutral-500">Total Users</h3>
             <span className="inline-flex items-center justify-center rounded-full bg-blue-100 p-2 text-blue-700">
               <Users className="h-4 w-4" />
             </span>
           </div>
-          <div className="text-3xl font-bold">{loading ? "..." : stats.members.total}</div>
+          <div className="text-3xl font-bold">{loading ? "..." : stats.users.total}</div>
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between text-xs text-neutral-500">
               <span className="flex items-center"><ArrowUpRight className="mr-1 h-3 w-3 text-emerald-500" /> New (this week)</span>
-              <span className="font-medium text-neutral-900">{loading ? "..." : stats.members.new}</span>
+              <span className="font-medium text-neutral-900">{loading ? "..." : stats.users.new}</span>
             </div>
             <div className="flex items-center justify-between text-xs text-neutral-500">
               <span className="flex items-center"><BookOpen className="mr-1 h-3 w-3 text-blue-500" /> Active (borrowing)</span>
-              <span className="font-medium text-neutral-900">{loading ? "..." : stats.members.active}</span>
+              <span className="font-medium text-neutral-900">{loading ? "..." : stats.users.active}</span>
             </div>
           </div>
         </div>
@@ -472,9 +472,9 @@ export default function Dashboard() {
                                    {item.daysOverdue}d late
                                </span>
                            </div>
-                           <p className="text-sm text-neutral-500 mb-0.5">{item.memberName}</p>
-                           <p className="text-xs text-neutral-400 mb-1">{item.memberEmail}</p>
-                           <p className="text-xs text-neutral-400 font-mono">ID: {item.membershipId}</p>
+                           <p className="text-sm text-neutral-500 mb-0.5">{item.userName}</p>
+                           <p className="text-xs text-neutral-400 mb-1">{item.userEmail}</p>
+                           <p className="text-xs text-neutral-400 font-mono">NIS: {item.userIdNumber}</p>
                        </div>
                        <div className="mt-3 pt-3 border-t border-neutral-100 flex items-center justify-between">
                            <span className="text-xs text-neutral-500">Proposed Fine:</span>
@@ -503,7 +503,7 @@ export default function Dashboard() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
                     <input 
                         type="text" 
-                        placeholder="Search books or members..." 
+                        placeholder="Search books or users..." 
                         className="h-9 w-64 rounded-md border border-neutral-200 bg-neutral-50 pl-9 pr-4 text-sm outline-none focus:border-neutral-400"
                     />
                  </div>
@@ -514,8 +514,8 @@ export default function Dashboard() {
             <table className="w-full text-left text-sm">
               <thead className="bg-neutral-50 text-neutral-500 border-b">
                 <tr>
-                   <th className="px-6 py-3 font-medium">Member Name</th>
-                   <th className="px-6 py-3 font-medium">Member Email</th>
+                   <th className="px-6 py-3 font-medium">User Name</th>
+                   <th className="px-6 py-3 font-medium">User Contact</th>
                    <th className="px-6 py-3 font-medium">Book</th>
                    <th className="px-6 py-3 font-medium">Borrowed</th>
                    <th className="px-6 py-3 font-medium">Due</th>
@@ -534,10 +534,10 @@ export default function Dashboard() {
                        .map((t) => (
                          <tr key={t.id} className="group hover:bg-neutral-50/50 transition-colors">
                              <td className="px-6 py-4">
-                                 <div className="font-medium text-neutral-900">{t.memberName}</div>
+                                 <div className="font-medium text-neutral-900">{t.userName}</div>
                              </td>
                              <td className="px-6 py-4 text-neutral-500">
-                                 {t.member.email}
+                                 {t.user.email || t.user.phoneNumber || '-'}
                              </td>
                              <td className="px-6 py-4">
                                  <div className="font-medium text-neutral-900 line-clamp-1 max-w-[200px]" title={t.book.title}>{t.book.title}</div>

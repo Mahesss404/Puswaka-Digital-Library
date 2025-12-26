@@ -18,7 +18,7 @@ import { db } from '@/lib/firebase';
 
 const TransactionsManagement = () => {
   const [books, setBooks] = useState([]);
-  const [members, setMembers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [borrowRecords, setBorrowRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showBorrowModal, setShowBorrowModal] = useState(false);
@@ -28,12 +28,12 @@ const TransactionsManagement = () => {
   
   const [borrowForm, setBorrowForm] = useState({
     bookId: '',
-    memberId: '',
+    userId: '',
     dueDate: '',
-    memberIdInput: '',
+    userIdInput: '',
     bookIdInput: ''
   });
-  const [memberScanError, setMemberScanError] = useState('');
+  const [userScanError, setUserScanError] = useState('');
   const [bookScanError, setBookScanError] = useState('');
   
   // Book Scanner State
@@ -60,14 +60,14 @@ const TransactionsManagement = () => {
       }
     );
 
-    const membersUnsubscribe = onSnapshot(
-      collection(db, 'members'),
+    const usersUnsubscribe = onSnapshot(
+      collection(db, 'users'),
       (snapshot) => {
-        const membersData = snapshot.docs.map(doc => ({
+        const usersData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        setMembers(membersData);
+        setUsers(usersData);
       }
     );
 
@@ -90,26 +90,26 @@ const TransactionsManagement = () => {
 
     return () => {
       booksUnsubscribe();
-      membersUnsubscribe();
+      usersUnsubscribe();
       borrowsUnsubscribe();
     };
   }, []);
 
-  const findMemberByMembershipId = async (membershipId) => {
-    const memberQuery = query(
-      collection(db, 'members'),
-      where('membershipId', '==', membershipId)
+  const findUserByIdNumber = async (idNumber) => {
+    const userQuery = query(
+      collection(db, 'users'),
+      where('idNumber', '==', idNumber)
     );
-    const memberSnapshot = await getDocs(memberQuery);
+    const userSnapshot = await getDocs(userQuery);
     
-    if (memberSnapshot.empty) {
+    if (userSnapshot.empty) {
       return null;
     }
     
-    const memberDoc = memberSnapshot.docs[0];
+    const userDoc = userSnapshot.docs[0];
     return {
-      id: memberDoc.id,
-      ...memberDoc.data()
+      id: userDoc.id,
+      ...userDoc.data()
     };
   };
 
@@ -139,21 +139,21 @@ const TransactionsManagement = () => {
     };
   };
 
-  const handleMemberIdInput = async (memberId) => {
-    setMemberScanError('');
-    if (!memberId.trim()) {
-      setMemberScanError('Please enter a member ID');
+  const handleUserIdInput = async (userId) => {
+    setUserScanError('');
+    if (!userId.trim()) {
+      setUserScanError('Please enter a user NIS');
       return;
     }
 
-    const member = await findMemberByMembershipId(memberId.trim());
-    if (!member) {
-      setMemberScanError('Member not found with this ID');
+    const user = await findUserByIdNumber(userId.trim());
+    if (!user) {
+      setUserScanError('User not found with this NIS');
       return;
     }
 
-    setBorrowForm({ ...borrowForm, memberId: member.id, memberIdInput: memberId.trim() });
-    alert(`✓ Member found: ${member.name}`);
+    setBorrowForm({ ...borrowForm, userId: user.id, userIdInput: userId.trim() });
+    alert(`✓ User found: ${user.name}`);
   };
 
   const handleBookIdInput = async (bookIdOrISBN) => {
@@ -177,8 +177,8 @@ const TransactionsManagement = () => {
   };
 
   const handleBorrowBook = async () => {
-    if (!borrowForm.memberId || !borrowForm.bookId || !borrowForm.dueDate) {
-      alert('Please scan/enter member ID, book ID, and select due date');
+    if (!borrowForm.userId || !borrowForm.bookId || !borrowForm.dueDate) {
+      alert('Please scan/enter user NIS, book ID, and select due date');
       return;
     }
     
@@ -190,12 +190,12 @@ const TransactionsManagement = () => {
       }
       const book = { id: bookDoc.id, ...bookDoc.data() };
 
-      const memberDoc = await getDoc(doc(db, 'members', borrowForm.memberId));
-      if (!memberDoc.exists()) {
-        alert('Member not found');
+      const userDoc = await getDoc(doc(db, 'users', borrowForm.userId));
+      if (!userDoc.exists()) {
+        alert('User not found');
         return;
       }
-      const member = { id: memberDoc.id, ...memberDoc.data() };
+      const userData = { id: userDoc.id, ...userDoc.data() };
 
       if (book.available <= 0) {
         alert('Book is not available');
@@ -204,13 +204,13 @@ const TransactionsManagement = () => {
 
       const activeBorrowsQuery = query(
         collection(db, 'borrows'),
-        where('memberId', '==', borrowForm.memberId),
+        where('userId', '==', borrowForm.userId),
         where('bookId', '==', borrowForm.bookId),
         where('status', '==', 'borrowed')
       );
       const activeBorrowsSnapshot = await getDocs(activeBorrowsQuery);
       if (!activeBorrowsSnapshot.empty) {
-        alert('Member already has an active borrow for this book');
+        alert('User already has an active borrow for this book');
         return;
       }
 
@@ -219,9 +219,9 @@ const TransactionsManagement = () => {
         bookId: borrowForm.bookId,
         bookTitle: book.title,
         bookISBN: book.isbn,
-        memberId: borrowForm.memberId,
-        memberName: member.name,
-        memberEmail: member.email,
+        userId: borrowForm.userId,
+        userName: userData.name,
+        userContact: userData.email || userData.phoneNumber,
         borrowDate: serverTimestamp(),
         dueDate: dueDateTimestamp,
         status: 'borrowed',
@@ -234,14 +234,14 @@ const TransactionsManagement = () => {
         available: book.available - 1
       });
 
-      await updateDoc(doc(db, 'members', borrowForm.memberId), {
-        borrowedBooks: (member.borrowedBooks || 0) + 1
+      await updateDoc(doc(db, 'users', borrowForm.userId), {
+        borrowedCount: (userData.borrowedCount || 0) + 1
       });
       
-      setBorrowForm({ bookId: '', memberId: '', dueDate: '', memberIdInput: '', bookIdInput: '' });
+      setBorrowForm({ bookId: '', userId: '', dueDate: '', userIdInput: '', bookIdInput: '' });
       setShowBorrowModal(false);
       setSelectedBook(null);
-      setMemberScanError('');
+      setUserScanError('');
       setBookScanError('');
       alert('✓ Book borrowed successfully!');
     } catch (error) {
@@ -271,11 +271,11 @@ const TransactionsManagement = () => {
         });
       }
 
-      const memberDoc = await getDoc(doc(db, 'members', record.memberId));
-      if (memberDoc.exists()) {
-        const member = memberDoc.data();
-        await updateDoc(doc(db, 'members', record.memberId), {
-          borrowedBooks: Math.max(0, (member.borrowedBooks || 0) - 1)
+      const userDoc = await getDoc(doc(db, 'users', record.userId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        await updateDoc(doc(db, 'users', record.userId), {
+          borrowedCount: Math.max(0, (userData.borrowedCount || 0) - 1)
         });
       }
 
@@ -377,8 +377,8 @@ const TransactionsManagement = () => {
   const filteredBorrows = borrowRecords
     .filter(borrow =>
       borrow.bookTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      borrow.memberName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      borrow.memberEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      borrow.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      borrow.userContact?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       borrow.bookISBN?.includes(searchTerm)
     )
     .sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
@@ -424,7 +424,7 @@ const TransactionsManagement = () => {
           <table className="w-full text-left text-sm">
             <thead className="bg-neutral-50 text-neutral-500 border-b">
               <tr>
-                <th className="px-6 py-3 font-medium">Member</th>
+                <th className="px-6 py-3 font-medium">User</th>
                 <th className="px-6 py-3 font-medium">Book</th>
                 <th className="px-6 py-3 font-medium">Borrowed</th>
                 <th className="px-6 py-3 font-medium">Due</th>
@@ -444,8 +444,8 @@ const TransactionsManagement = () => {
                 paginatedBorrows.map((record) => (
                   <tr key={record.id} className="group hover:bg-neutral-50/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-neutral-900">{record.memberName}</div>
-                      <div className="text-xs text-neutral-500">{record.memberEmail}</div>
+                      <div className="font-medium text-neutral-900">{record.userName}</div>
+                      <div className="text-xs text-neutral-500">{record.userContact}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-neutral-900 line-clamp-1 max-w-[200px]" title={record.bookTitle}>{record.bookTitle}</div>
@@ -603,34 +603,34 @@ const TransactionsManagement = () => {
             </div>
             
             <div className="p-6 space-y-5">
-              {/* Member ID Input */}
+              {/* User ID Input */}
               <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                 <label className="block text-sm font-semibold text-neutral-700 mb-2">
-                  Member ID / Card
+                  User NIS / ID
                 </label>
                 <div className="flex gap-2 mb-2">
                   <input
                     type="text"
-                    placeholder="Enter or scan Member ID"
-                    value={borrowForm.memberIdInput}
-                    onChange={(e) => setBorrowForm({ ...borrowForm, memberIdInput: e.target.value })}
-                    onKeyPress={(e) => e.key === 'Enter' && handleMemberIdInput(borrowForm.memberIdInput)}
+                    placeholder="Enter User NIS"
+                    value={borrowForm.userIdInput}
+                    onChange={(e) => setBorrowForm({ ...borrowForm, userIdInput: e.target.value })}
+                    onKeyPress={(e) => e.key === 'Enter' && handleUserIdInput(borrowForm.userIdInput)}
                     className="flex-1 px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4995ED]/20 focus:border-[#4995ED]"
                   />
                   <button
-                    onClick={() => handleMemberIdInput(borrowForm.memberIdInput)}
+                    onClick={() => handleUserIdInput(borrowForm.userIdInput)}
                     className="px-4 py-2.5 bg-[#4995ED] text-white rounded-lg hover:bg-[#3a7bc8] flex items-center gap-2 font-medium transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
                     Verify
                   </button>
                 </div>
-                {memberScanError && (
-                  <p className="text-xs text-red-600 mt-1">{memberScanError}</p>
+                {userScanError && (
+                  <p className="text-xs text-red-600 mt-1">{userScanError}</p>
                 )}
-                {borrowForm.memberId && (
+                {borrowForm.userId && (
                   <p className="text-xs text-emerald-600 mt-1">
-                    ✓ Member verified: {members.find(m => m.id === borrowForm.memberId)?.name}
+                    ✓ User verified: {users.find(u => u.id === borrowForm.userId)?.name}
                   </p>
                 )}
               </div>
@@ -742,7 +742,7 @@ const TransactionsManagement = () => {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleBorrowBook}
-                  disabled={!borrowForm.memberId || !borrowForm.bookId || !borrowForm.dueDate}
+                  disabled={!borrowForm.userId || !borrowForm.bookId || !borrowForm.dueDate}
                   className="flex-1 px-4 py-2.5 bg-[#4995ED] text-white rounded-lg hover:bg-[#3a7bc8] disabled:bg-neutral-300 disabled:cursor-not-allowed font-medium transition-colors"
                 >
                   Confirm Borrow
@@ -751,8 +751,8 @@ const TransactionsManagement = () => {
                   onClick={() => {
                     setShowBorrowModal(false);
                     setSelectedBook(null);
-                    setBorrowForm({ bookId: '', memberId: '', dueDate: '', memberIdInput: '', bookIdInput: '' });
-                    setMemberScanError('');
+                    setBorrowForm({ bookId: '', userId: '', dueDate: '', userIdInput: '', bookIdInput: '' });
+                    setUserScanError('');
                     setBookScanError('');
                     setShowBookScanner(false);
                     stopBookBarcodeScan();
