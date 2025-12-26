@@ -31,46 +31,25 @@ const Notification = () => {
     const [activeTab, setActiveTab] = useState('All');
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [userEmail, setUserEmail] = useState("");
-    const [memberId, setMemberId] = useState(null);
+    const [userId, setUserId] = useState(null);
 
-    // 1. Auth & Member Check
+    // 1. Get Auth User UID directly
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUserEmail(user.email);
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            if (firebaseUser) {
+                setUserId(firebaseUser.uid);
             } else {
                 setLoading(false); // No user, stop loading
-                // Optionally navigate to login, but let's just show empty state
             }
         });
         return () => unsubscribe();
     }, []);
 
-    useEffect(() => {
-        if (!userEmail) return;
-        const fetchMember = async () => {
-            try {
-                const q = query(collection(db, 'members'), where('email', '==', userEmail));
-                const snapshot = await getDocs(q);
-                if (!snapshot.empty) {
-                    setMemberId(snapshot.docs[0].id);
-                } else {
-                    setLoading(false);
-                }
-            } catch (err) {
-                console.error("Error fetching member:", err);
-                setLoading(false);
-            }
-        };
-        fetchMember();
-    }, [userEmail]);
-
     // 2. Fetch Borrows & Generate Notifications
     useEffect(() => {
-        if (!memberId) return;
+        if (!userId) return;
 
-        const q = query(collection(db, 'borrows'), where('memberId', '==', memberId));
+        const q = query(collection(db, 'borrows'), where('userId', '==', userId));
         const unsubscribe = onSnapshot(q, async (snapshot) => {
             const rawBorrows = await Promise.all(snapshot.docs.map(async (docSnap) => {
                 const data = docSnap.data();
@@ -155,7 +134,7 @@ const Notification = () => {
         });
 
         return () => unsubscribe();
-    }, [memberId]);
+    }, [userId]);
 
 
     // Filter Logic

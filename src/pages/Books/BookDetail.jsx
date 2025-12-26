@@ -11,14 +11,14 @@ const BookDetail = () => {
   const navigate = useNavigate();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [userEmail, setUserEmail] = useState("");
-  const [memberId, setMemberId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [isUserBorrowed, setIsUserBorrowed] = useState(false);
   const [userBorrowInfo, setUserBorrowInfo] = useState(null);
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [borrowForm, setBorrowForm] = useState({
-    memberId: '',
+    userId: '',
     dueDate: ''
   });
 
@@ -32,28 +32,36 @@ const BookDetail = () => {
     return () => unsubscribeAuth();
   }, []);
 
-  // Find member by email
+  // Find user by email or phone
   useEffect(() => {
     if (!userEmail) return;
 
-    const findMember = async () => {
+    const findUser = async () => {
       try {
-        const membersQuery = query(
-          collection(db, 'members'),
+        let usersQuery = query(
+          collection(db, 'users'),
           where('email', '==', userEmail)
         );
-        const membersSnapshot = await getDocs(membersQuery);
+        let usersSnapshot = await getDocs(usersQuery);
         
-        if (!membersSnapshot.empty) {
-          const memberDoc = membersSnapshot.docs[0];
-          setMemberId(memberDoc.id);
+        if (usersSnapshot.empty) {
+          usersQuery = query(
+            collection(db, 'users'),
+            where('phoneNumber', '==', userEmail)
+          );
+          usersSnapshot = await getDocs(usersQuery);
+        }
+        
+        if (!usersSnapshot.empty) {
+          const userDoc = usersSnapshot.docs[0];
+          setUserId(userDoc.id);
         }
       } catch (error) {
-        console.error('Error finding member:', error);
+        console.error('Error finding user:', error);
       }
     };
 
-    findMember();
+    findUser();
   }, [userEmail]);
 
   // Load book data from Firestore
@@ -89,13 +97,13 @@ const BookDetail = () => {
 
   // Check if user has borrowed this book
   useEffect(() => {
-    if (!memberId || !id) return;
+    if (!userId || !id) return;
 
     const checkUserBorrow = async () => {
       try {
         const borrowsQuery = query(
           collection(db, 'borrows'),
-          where('memberId', '==', memberId),
+          where('userId', '==', userId),
           where('bookId', '==', id),
           where('status', '==', 'borrowed')
         );
@@ -119,30 +127,30 @@ const BookDetail = () => {
     };
 
     checkUserBorrow();
-  }, [memberId, id]);
+  }, [userId, id]);
 
-  // Load members from Firestore
+  // Load users from Firestore
   useEffect(() => {
-    const membersUnsubscribe = onSnapshot(
-      collection(db, 'members'),
+    const usersUnsubscribe = onSnapshot(
+      collection(db, 'users'),
       (snapshot) => {
-        const membersData = snapshot.docs.map(doc => ({
+        const usersData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-        setMembers(membersData);
+        setUsers(usersData);
       },
       (error) => {
-        console.error('Error listening to members:', error);
+        console.error('Error listening to users:', error);
       }
     );
 
-    return () => membersUnsubscribe();
+    return () => usersUnsubscribe();
   }, []);
 
   const handleBorrow = async () => {
-    if (!borrowForm.memberId || !borrowForm.dueDate) {
-      alert('Please select a member and due date');
+    if (!borrowForm.userId || !borrowForm.dueDate) {
+      alert('Please select a user and due date');
       return;
     }
 
@@ -160,13 +168,13 @@ const BookDetail = () => {
       }
       const latestBook = { id: bookDoc.id, ...bookDoc.data() };
 
-      // Get member data
-      const memberDoc = await getDoc(doc(db, 'members', borrowForm.memberId));
-      if (!memberDoc.exists()) {
-        alert('Member not found');
+      // Get user data
+      const userDoc = await getDoc(doc(db, 'users', borrowForm.userId));
+      if (!userDoc.exists()) {
+        alert('User not found');
         return;
       }
-      const member = { id: memberDoc.id, ...memberDoc.data() };
+      const userData = { id: userDoc.id, ...userDoc.data() };
 
       // Validate book availability
       if (latestBook.available <= 0) {
@@ -174,16 +182,16 @@ const BookDetail = () => {
         return;
       }
 
-      // Check if member already borrowed this book
+      // Check if user already borrowed this book
       const activeBorrowsQuery = query(
         collection(db, 'borrows'),
-        where('memberId', '==', borrowForm.memberId),
+        where('userId', '==', borrowForm.userId),
         where('bookId', '==', book.id),
         where('status', '==', 'borrowed')
       );
       const activeBorrowsSnapshot = await getDocs(activeBorrowsQuery);
       if (!activeBorrowsSnapshot.empty) {
-        alert('Member already has an active borrow for this book');
+        alert('User already has an active borrow for this book');
         return;
       }
 
@@ -193,9 +201,9 @@ const BookDetail = () => {
         bookId: book.id,
         bookTitle: latestBook.title,
         bookISBN: latestBook.isbn,
-        memberId: borrowForm.memberId,
-        memberName: member.name,
-        memberEmail: member.email,
+        userId: borrowForm.userId,
+        userName: userData.name,
+        userContact: userData.email || userData.phoneNumber,
         borrowDate: serverTimestamp(),
         dueDate: dueDateTimestamp,
         status: 'borrowed',
@@ -209,15 +217,15 @@ const BookDetail = () => {
         available: latestBook.available - 1
       });
 
-      // Update member borrowed count
-      await updateDoc(doc(db, 'members', borrowForm.memberId), {
-        borrowedBooks: (member.borrowedBooks || 0) + 1
+      // Update user borrowed count
+      await updateDoc(doc(db, 'users', borrowForm.userId), {
+        borrowedCount: (userData.borrowedCount || 0) + 1
       });
 
       // Update local state
       setBook({ ...book, available: book.available - 1 });
       setShowBorrowModal(false);
-      setBorrowForm({ memberId: '', dueDate: '' });
+      setBorrowForm({ userId: '', dueDate: '' });
       setIsUserBorrowed(true);
       alert('✓ Book borrowed successfully!');
     } catch (error) {
@@ -380,14 +388,14 @@ const BookDetail = () => {
             </div>
             <div className="space-y-4">
               <select
-                value={borrowForm.memberId}
-                onChange={(e) => setBorrowForm({ ...borrowForm, memberId: e.target.value })}
+                value={borrowForm.userId}
+                onChange={(e) => setBorrowForm({ ...borrowForm, userId: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">Select Member</option>
-                {members.map(member => (
-                  <option key={member.id} value={member.id}>
-                    {member.name} ({member.membershipId})
+                <option value="">Select User</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.idNumber || user.phoneNumber || 'N/A'})
                   </option>
                 ))}
               </select>
@@ -409,7 +417,7 @@ const BookDetail = () => {
                 <button
                   onClick={() => {
                     setShowBorrowModal(false);
-                    setBorrowForm({ memberId: '', dueDate: '' });
+                    setBorrowForm({ userId: '', dueDate: '' });
                   }}
                   className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
                 >

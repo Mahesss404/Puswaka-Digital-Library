@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, CheckCircle, Clock, ArrowLeft } from 'lucide-react';
-import { collection, query, where, getDocs, onSnapshot, doc as firestoreDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc as firestoreDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const History = () => {
     const navigate = useNavigate();
-    const [userEmail, setUserEmail] = useState("");
-    const [member, setMember] = useState(null);
+    const [userId, setUserId] = useState(null);
     const [borrowHistory, setBorrowHistory] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Get current user
+    // Get current auth user
     useEffect(() => {
-        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUserEmail(user.email || "");
+        const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+            if (firebaseUser) {
+                setUserId(firebaseUser.uid);
             } else {
                 navigate("/login");
             }
@@ -24,41 +23,13 @@ const History = () => {
         return () => unsubscribeAuth();
     }, [navigate]);
 
-    // Find member by email
+    // Listen to borrow history for this user
     useEffect(() => {
-        if (!userEmail) return;
-
-        const findMember = async () => {
-            try {
-                const membersQuery = query(
-                    collection(db, 'members'),
-                    where('email', '==', userEmail)
-                );
-                const membersSnapshot = await getDocs(membersQuery);
-                
-                if (!membersSnapshot.empty) {
-                    const memberDoc = membersSnapshot.docs[0];
-                    const memberData = { id: memberDoc.id, ...memberDoc.data() };
-                    setMember(memberData);
-                } else {
-                    setLoading(false);
-                }
-            } catch (error) {
-                console.error('Error finding member:', error);
-                setLoading(false);
-            }
-        };
-
-        findMember();
-    }, [userEmail]);
-
-    // Listen to borrow history for this member
-    useEffect(() => {
-        if (!member?.id) return;
+        if (!userId) return;
 
         const borrowsQuery = query(
             collection(db, 'borrows'),
-            where('memberId', '==', member.id)
+            where('userId', '==', userId)
         );
 
         const unsubscribe = onSnapshot(borrowsQuery, async (snapshot) => {
@@ -107,7 +78,7 @@ const History = () => {
         });
 
         return () => unsubscribe();
-    }, [member?.id]);
+    }, [userId]);
 
     const isOverdue = (dueDate) => {
         if (!dueDate) return false;
