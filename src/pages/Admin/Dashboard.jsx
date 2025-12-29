@@ -16,6 +16,7 @@ import {
   RotateCcw,
   BadgeAlert,
   Search,
+  Monitor,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -270,6 +271,31 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-white">
+      {/* Mobile Overlay - Blocks access on mobile devices */}
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-sm px-4 py-6 lg:hidden">
+        <div className="w-full max-w-sm rounded-xl bg-white p-5 sm:p-6 text-center shadow-2xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary/10">
+            <Monitor className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+          </div>
+          <h2 className="mb-2 text-lg sm:text-xl font-bold text-slate-900">Desktop Access Required</h2>
+          <p className="mb-4 text-sm sm:text-base text-slate-600 leading-relaxed">
+            The admin dashboard is optimized for desktop devices. Please access from a computer for the best experience.
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-500">
+              <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary"></div>
+              <span>Minimum screen width: 1024px</span>
+            </div>
+            <a 
+              href="/" 
+              className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 sm:px-6 sm:py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90 active:bg-primary/80"
+            >
+              Return to Home
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-slate-900 text-slate-100 transition-all duration-300 ${sidebarOpen ? 'w-56' : 'w-16'}`}>
         {/* Logo */}

@@ -19,7 +19,7 @@ const Header = () => {
 
     // Menu items with icons
     const menuItems = [
-        { label: 'Home', path: '/', icon: Home },
+        { label: 'Home', path: '/home', icon: Home },
         { label: 'Book Catalog', path: '/catalog', icon: BookOpen },
         { label: 'History', path: '/history', icon: History },
         { label: 'Profile', path: '/profile', icon: User },

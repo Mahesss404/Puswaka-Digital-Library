@@ -173,11 +173,11 @@ const Landingpage = () => {
                             <a href="#benefits" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">Benefits</a>
                             <a href="#faq" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">FAQ</a>
                             <hr className="my-2 border-gray-200" />
-                            <Link to="/login" className="px-4 py-2 text-primary font-semibold hover:bg-primary/5 rounded-lg transition-colors">
-                                User Login
-                            </Link>
-                            <Link to="/login" className="mx-4 py-2.5 text-center font-semibold text-white bg-gradient-to-r from-primary to-blue-600 rounded-xl">
+                            {/* <Link to="/login" className="px-4 py-2 text-primary font-semibold hover:bg-primary/5 rounded-lg transition-colors">
                                 Admin Login
+                            </Link> */}
+                            <Link to="/login" className="mx-4 py-2.5 text-center font-semibold text-white bg-gradient-to-r from-primary to-blue-600 rounded-xl">
+                                Login
                             </Link>
                         </div>
                     </div>
@@ -510,12 +510,12 @@ const Landingpage = () => {
                             Start Reading Now
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
-                        <Link 
+                        {/* <Link 
                             to="/login"
                             className="w-full sm:w-auto px-8 py-4 bg-gray-900 text-white font-semibold rounded-2xl hover:bg-gray-800 transition-all duration-300 flex items-center justify-center gap-2"
                         >
                             Admin Dashboard
-                        </Link>
+                        </Link> */}
                     </div>
                 </div>
             </section>
