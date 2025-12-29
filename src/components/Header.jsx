@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Menu, Search, X, Bell, Home, BookOpen, Bookmark, User, Settings, History } from 'lucide-react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,6 +11,7 @@ const Header = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const menuRef = useRef(null);
     const searchRef = useRef(null);
     const navigate = useNavigate();
@@ -133,8 +135,48 @@ const Header = () => {
         };
     }, []);
 
+    // Check for unread notifications (overdue borrows)
+    useEffect(() => {
+        let unsubscribeBorrows = () => {};
+        
+        const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+            if (firebaseUser) {
+                // Listen to user's borrows in real-time
+                const borrowsQuery = query(
+                    collection(db, 'borrows'), 
+                    where('userId', '==', firebaseUser.uid),
+                    where('status', '==', 'borrowed')
+                );
+                
+                unsubscribeBorrows = onSnapshot(borrowsQuery, (snapshot) => {
+                    const now = new Date();
+                    let overdueCount = 0;
+                    
+                    snapshot.docs.forEach((doc) => {
+                        const data = doc.data();
+                        const dueDate = data.dueDate?.toDate ? data.dueDate.toDate() : new Date(data.dueDate);
+                        
+                        // Count as unread if overdue (past due date and not returned)
+                        if (dueDate && now > dueDate) {
+                            overdueCount++;
+                        }
+                    });
+                    
+                    setUnreadCount(overdueCount);
+                });
+            } else {
+                setUnreadCount(0);
+            }
+        });
+
+        return () => {
+            unsubscribeAuth();
+            unsubscribeBorrows();
+        };
+    }, []);
+
     return (
-        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 relative z-50 sticky top-0">
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 z-50 sticky top-0">
             <div className="flex items-center justify-between max-w-7xl mx-auto">
                 <div className="relative" ref={menuRef}>
                     <button 
@@ -215,7 +257,9 @@ const Header = () => {
                     
                     <Link to="/notification" className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
                         <Bell className="w-6 h-6 text-gray-700" />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                        )}
                     </Link>
                 </div>
             </div>
