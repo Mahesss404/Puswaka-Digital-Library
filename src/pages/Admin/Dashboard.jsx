@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Link, useLocation, Outlet } from "react-router-dom"
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom"
 import { 
   Users, 
   BookOpen, 
@@ -39,12 +39,13 @@ import {
   YAxis 
 } from "recharts"
 import { collection, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase';
 import { calculateFine } from "@/utils/calculatefine";
 
 const sidebarBottomItems = [
-  { name: 'Settings', icon: Settings2, href: '#' },
-  { name: 'Help', icon: HelpCircle, href: '#' },
+  // { name: 'Settings', icon: Settings2, href: '#', isLogout: false },
+  { name: 'Logout', icon: LogOut, href: '#', isLogout: true },
 ];
 
 const chartData = [
@@ -85,6 +86,19 @@ export default function Dashboard() {
   
   // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Navigation
+  const navigate = useNavigate();
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
   
   // Get current path for active sidebar highlighting
   const location = useLocation();
@@ -172,7 +186,7 @@ export default function Dashboard() {
           // Join Data
           const user = usersMap[data.userId] || { name: 'Unknown', email: '', idNumber: 'N/A' };
           const book = booksMap[data.bookId] || { title: 'Unknown Book' };
-            console.log(user)
+            // console.log(user)
 
           const {penalty,daysOverdue} = calculateFine (data,dueDate,now);
 
@@ -288,15 +302,27 @@ export default function Dashboard() {
         {/* Bottom Items */}
         <div className="border-t border-slate-700/50 px-3 py-4 space-y-1">
           {sidebarBottomItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
-              title={!sidebarOpen ? item.name : undefined}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {sidebarOpen && item.name}
-            </Link>
+            item.isLogout ? (
+              <button
+                key={item.name}
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 hover:text-red-300"
+                title={!sidebarOpen ? item.name : undefined}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                {sidebarOpen && item.name}
+              </button>
+            ) : (
+              <Link
+                key={item.name}
+                to={item.href}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                title={!sidebarOpen ? item.name : undefined}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                {sidebarOpen && item.name}
+              </Link>
+            )
           ))}
         </div>
       </aside>
