@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from "react-router-dom";
-import { auth } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 // AdminProtectedRoute - Only allows admin users to access
@@ -24,20 +23,19 @@ const AdminProtectedRoute = ({ children }) => {
                 return;
             }
 
-            // User is authenticated, check if admin
+            // User is authenticated, check if admin via role field in users collection
             try {
-                const userEmail = user.email;
-
-                // Check if email exists in admins collection
-                const adminsQuery = query(
-                    collection(db, 'admins'),
-                    where('email', '==', userEmail)
-                );
-                const adminSnapshot = await getDocs(adminsQuery);
+                // Fetch user document from users collection
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                
+                // Check if role is ADMIN
+                const userData = userDocSnap.exists() ? userDocSnap.data() : null;
+                const isAdmin = userData?.role === "ADMIN";
 
                 setAuthState({
                     isAuthenticated: true,
-                    isAdmin: !adminSnapshot.empty,
+                    isAdmin: isAdmin,
                     isLoading: false
                 });
             } catch (error) {
@@ -76,3 +74,4 @@ const AdminProtectedRoute = ({ children }) => {
 };
 
 export default AdminProtectedRoute;
+

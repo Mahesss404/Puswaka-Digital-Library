@@ -185,7 +185,7 @@ const Profile = () => {
                                         </div>
                                         <div>
                                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email Address</p>
-                                            <p className="font-semibold text-gray-900 text-sm">{user.email || 'Not provided'}</p>
+                                            <p className="font-semibold text-gray-900 text-sm">{user.email || authUser?.email || 'Not provided'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -243,3 +243,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

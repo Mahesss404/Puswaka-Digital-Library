@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -14,11 +14,26 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
 
-    // Redirect if already authenticated
+    // Redirect if already authenticated - check role and redirect accordingly
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                navigate("/home", { replace: true });
+                try {
+                    // Fetch user role from Firestore
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    const userRole = userDocSnap.exists() ? userDocSnap.data().role : "USER";
+                    
+                    // Redirect based on role
+                    if (userRole === "ADMIN") {
+                        navigate("/admin", { replace: true });
+                    } else {
+                        navigate("/home", { replace: true });
+                    }
+                } catch (err) {
+                    console.error("Error checking user role:", err);
+                    navigate("/home", { replace: true });
+                }
             } else {
                 setCheckingAuth(false);
             }

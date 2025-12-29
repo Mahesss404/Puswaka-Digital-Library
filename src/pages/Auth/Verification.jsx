@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RecaptchaVerifier, signInWithPhoneNumber, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import OTPVerification from "@/components/OTPVerification";
 import { AlertCircle, Phone } from 'lucide-react';
@@ -247,6 +247,7 @@ const Verification = () => {
                     idNumber: signupData?.idNumber || "",
                     phoneNumber: phoneNumber,
                     password: signupData?.password || "", // Store password for login
+                    role: "USER", // Default role for new users - will not be set via custom claims
                     createdAt: serverTimestamp()
                 };
                 
@@ -279,8 +280,17 @@ const Verification = () => {
                 console.log('User logged in successfully:', userData);
             }
             
-            // Navigate to home
-            navigate('/home', { replace: true });
+            // Fetch user role from Firestore and redirect accordingly
+            const userDocRef = doc(db, "users", result.user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            const userRole = userDocSnap.exists() ? userDocSnap.data().role : "USER";
+            
+            // Navigate based on role
+            if (userRole === "ADMIN") {
+                navigate('/admin', { replace: true });
+            } else {
+                navigate('/home', { replace: true });
+            }
             
         } catch (err) {
             console.error('Error verifying OTP:', err);

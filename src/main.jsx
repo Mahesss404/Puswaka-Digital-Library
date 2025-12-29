@@ -21,15 +21,17 @@ import Dashboard from './pages/Admin/Dashboard';
 import DashboardBooks from './pages/Admin/Dashboard/Books';
 import DashboardMembers from './pages/Admin/Dashboard/Members';
 import DashboardTransactions from './pages/Admin/Dashboard/Transactions';
+import Landingpage from './Landingpage'
 
 const router = createBrowserRouter([
     { 
         path: '/',
-        element: <Navigate to="/login" replace />,
+        element: <Landingpage />,
     },
     { path: '/login', element: <Login />,},
     { path: '/registration', element: <Registration />,},
     { path: '/verification', element: <Verification />,},
+    // User routes - protected, ADMINs redirected to /admin
     {
         element: (
             <ProtectedRoute>
@@ -45,19 +47,20 @@ const router = createBrowserRouter([
             { path: '/catalog', element: <BookCatalog /> },
             { path: '/notification', element: <Notification /> },
             { path: '/notification/:id', element: <NotificationDetails /> },
-            { 
-                path: '/admin',
-                element: (
-                    <AdminProtectedRoute>
-                        <Dashboard />
-                    </AdminProtectedRoute>
-                ),
-                children: [
-                    { path: 'books', element: <DashboardBooks /> },
-                    { path: 'members', element: <DashboardMembers /> },
-                    { path: 'transactions', element: <DashboardTransactions /> },
-                ]
-            },
+        ]
+    },
+    // Admin routes - separate from user routes, only ADMIN role can access
+    { 
+        path: '/admin',
+        element: (
+            <AdminProtectedRoute>
+                <Dashboard />
+            </AdminProtectedRoute>
+        ),
+        children: [
+            { path: 'books', element: <DashboardBooks /> },
+            { path: 'members', element: <DashboardMembers /> },
+            { path: 'transactions', element: <DashboardTransactions /> },
         ]
     },
     { path: '*', element: <NotFoundPage />,},
