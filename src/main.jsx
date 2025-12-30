@@ -22,6 +22,7 @@ import DashboardBooks from './pages/Admin/Dashboard/Books';
 import DashboardMembers from './pages/Admin/Dashboard/Members';
 import DashboardTransactions from './pages/Admin/Dashboard/Transactions';
 import Landingpage from './Landingpage'
+import Layout from './components/Layout.jsx'
 
 const router = createBrowserRouter([
     { 
@@ -32,10 +33,11 @@ const router = createBrowserRouter([
     { path: '/registration', element: <Registration />,},
     { path: '/verification', element: <Verification />,},
     // User routes - protected, ADMINs redirected to /admin
+    // Layout component wraps all protected routes with Header and Footer
     {
         element: (
             <ProtectedRoute>
-                <Outlet />
+                <Layout />
             </ProtectedRoute>
         ),
         children: [

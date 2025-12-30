@@ -16,7 +16,6 @@ import {
 import { collection, query, where, onSnapshot, getDocs, getDoc, doc as firestoreDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import Header from '@/components/Header.jsx';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -382,9 +381,6 @@ const Home = () => {
             </Helmet>
 
             <main className="min-h-screen bg-background" role="main">
-                {/* Header Navigation */}
-                <Header />
-
                 {/* Main Content Container */}
                 <article className="p-4 lg:p-8 flex flex-col gap-4">
                     

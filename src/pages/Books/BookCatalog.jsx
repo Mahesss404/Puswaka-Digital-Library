@@ -4,7 +4,6 @@ import { ArrowLeft, Search } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Book from "@/components/ui/Book";
-import Header from "@/components/Header";
 import BookSkeleton from "@/components/ui/BookSkeleton";
 
 const BookCatalog = () => {
@@ -72,7 +71,6 @@ const BookCatalog = () => {
 
     return (
         <div className="bg-white">
-            <Header/>
             <div className="p-4 flex flex-col lg:p-8 gap-4">
                 {/* Back Button */}
                 <div>
