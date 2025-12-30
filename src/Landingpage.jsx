@@ -141,15 +141,21 @@ const Landingpage = () => {
                             }`}>FAQ</a>
                         </div>
 
-                        {/* Auth Buttons
+                        {/* Auth Buttons */}
                         <div className="hidden md:flex items-center gap-3">
                             <Link 
                                 to="/login"
+                                className=" px-5 py-2.5 text-sm font-semibold  text-white bg-gradient-to-r from-primary to-blue-600 rounded-xl"
+                            >
+                                Login
+                            </Link>
+                            <Link 
+                                to="/registration"
                                 className=" px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5 rounded-xl transition-all duration-300"
                             >
-                                Admin Login
+                                Register
                             </Link>
-                        </div> */}
+                        </div>
 
                         {/* Mobile Menu Button */}
                         <button 
@@ -173,9 +179,9 @@ const Landingpage = () => {
                             <a href="#benefits" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">Benefits</a>
                             <a href="#faq" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">FAQ</a>
                             <hr className="my-2 border-gray-200" />
-                            {/* <Link to="/login" className="px-4 py-2 text-primary font-semibold hover:bg-primary/5 rounded-lg transition-colors">
-                                Admin Login
-                            </Link> */}
+                            <Link to="/registration" className="px-4 py-2 text-primary font-semibold hover:bg-primary/5 rounded-lg transition-colors">
+                                Register
+                            </Link>
                             <Link to="/login" className="mx-4 py-2.5 text-center font-semibold text-white bg-gradient-to-r from-primary to-blue-600 rounded-xl">
                                 Login
                             </Link>
@@ -551,9 +557,9 @@ const Landingpage = () => {
                         <div>
                             <h4 className="text-white font-semibold mb-4">Access</h4>
                             <ul className="space-y-2">
-                                <li><Link to="/login" className="text-sm hover:text-white transition-colors">User Login</Link></li>
-                                <li><Link to="/login" className="text-sm hover:text-white transition-colors">Admin Login</Link></li>
-                                <li><Link to="/registration" className="text-sm hover:text-white transition-colors">Register</Link></li>
+                                <li><Link to="/#" className="text-sm hover:text-white transition-colors">User Login</Link></li>
+                                <li><Link to="/#" className="text-sm hover:text-white transition-colors">Admin Login</Link></li>
+                                <li><Link to="/#" className="text-sm hover:text-white transition-colors">Register</Link></li>
                             </ul>
                         </div>
 
@@ -568,7 +574,7 @@ const Landingpage = () => {
                     </div>
 
                     <div className="pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <p className="text-sm">© 2024 Puswaka. All rights reserved.</p>
+                        <p className="text-sm">© 2025 Puswaka. All rights reserved.</p>
                         <div className="flex items-center gap-6">
                             <a href="#" className="text-sm hover:text-white transition-colors">Privacy Policy</a>
                             <a href="#" className="text-sm hover:text-white transition-colors">Terms of Service</a>
