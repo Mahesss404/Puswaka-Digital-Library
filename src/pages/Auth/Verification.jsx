@@ -284,6 +284,7 @@ const Verification = () => {
             const userDocRef = doc(db, "users", result.user.uid);
             const userDocSnap = await getDoc(userDocRef);
             const userRole = userDocSnap.exists() ? userDocSnap.data().role : "USER";
+            // check user was completed onboarding
             const hasCompletedOnboarding = userDocSnap.exists() ? userDocSnap.data().hasCompletedOnboarding : false;
             
             // Navigate based on role and onboarding status
