@@ -23,6 +23,7 @@ import DashboardMembers from './pages/Admin/Dashboard/Members';
 import DashboardTransactions from './pages/Admin/Dashboard/Transactions';
 import Landingpage from './Landingpage'
 import Layout from './components/Layout.jsx'
+import Onboarding from './pages/Onboarding.jsx'
 
 const router = createBrowserRouter([
     { 
@@ -32,6 +33,15 @@ const router = createBrowserRouter([
     { path: '/login', element: <Login />,},
     { path: '/registration', element: <Registration />,},
     { path: '/verification', element: <Verification />,},
+    // Onboarding route - protected, shown after auth before home
+    { 
+        path: '/onboarding', 
+        element: (
+            <ProtectedRoute>
+                <Onboarding />
+            </ProtectedRoute>
+        ),
+    },
     // User routes - protected, ADMINs redirected to /admin
     // Layout component wraps all protected routes with Header and Footer
     {
