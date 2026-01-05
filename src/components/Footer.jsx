@@ -67,25 +67,25 @@ const Footer = () => {
 
                     {/* Support */}
                     <div>
-                        <h3 className="text-white font-semibold mb-4">Support</h3>
+                        <h3 className="text-primary font-semibold mb-4">Support</h3>
                         <ul className="space-y-2 text-sm">
                             <li>
-                                <a href="#" className="hover:text-white transition-colors">
+                                <a href="#" className="hover:text-primary transition-colors">
                                     Help Center
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-white transition-colors">
+                                <a href="#" className="hover:text-primary transition-colors">
                                     Privacy Policy
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-white transition-colors">
+                                <a href="#" className="hover:text-primary transition-colors">
                                     Terms of Service
                                 </a>
                             </li>
                             <li>
-                                <Link to="/notification" className="hover:text-white transition-colors">
+                                <Link to="/notification" className="hover:text-primary transition-colors">
                                     Notifications
                                 </Link>
                             </li>
