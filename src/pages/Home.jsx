@@ -422,7 +422,7 @@ const Home = () => {
                                     >
                                         {isLoadingBorrows ? (
                                             <div 
-                                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2"
+                                                className="flex gap-3 sm:gap-4 overflow-x pb-2"
                                                 aria-busy="true"
                                                 aria-label="Loading borrowed books"
                                             >
@@ -434,7 +434,7 @@ const Home = () => {
                                             </div>
                                         ) : borrowedBooks.length > 0 ? (
                                             <ul 
-                                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 list-none p-0 m-0"
+                                                className="flex gap-3 sm:gap-4 pb-2 list-none p-0 m-0"
                                                 role="list"
                                                 aria-label="List of borrowed books"
                                             >
