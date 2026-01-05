@@ -70,8 +70,7 @@ const BookCatalog = () => {
     console.log(books);
 
     return (
-        <div className="bg-white">
-            <div className="p-4 flex flex-col lg:p-8 gap-4">
+        <div className="bg-white p-4 flex flex-col lg:p-8 gap-4">
                 {/* Back Button */}
                 <div>
                     <button
@@ -149,7 +148,6 @@ const BookCatalog = () => {
                         )}
                     </div>
                 )}
-            </div>
         </div>
     );
 };

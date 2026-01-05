@@ -382,14 +382,14 @@ const Home = () => {
 
             <main className="min-h-screen bg-background" role="main">
                 {/* Main Content Container */}
-                <article className="p-4 lg:p-8 flex flex-col gap-4">
+                <article className="p-4 flex flex-col gap-4">
                     
                     {/* Hero Section - User Welcome & Borrowed Books */}
                     <section 
                         className="bg-primary rounded-2xl px-4 sm:px-6 py-6 sm:py-8"
                         aria-labelledby="welcome-heading"
                     >
-                        <div className="max-w-7xl mx-auto">
+                        <div>
                             <header>
                                 <h1 
                                     id="welcome-heading" 
@@ -509,10 +509,9 @@ const Home = () => {
 
                     {/* Explore by Category Section */}
                     <section 
-                        className="bg-white"
                         aria-labelledby="categories-heading"
                     >
-                        <div className="max-w-7xl mx-auto">
+                        <div>
                             <header className="flex items-center justify-between mb-4 sm:mb-6">
                                 <h2 
                                     id="categories-heading" 
@@ -565,10 +564,9 @@ const Home = () => {
 
                     {/* Book Recommendations Section */}
                     <section 
-                        className="bg-white"
                         aria-labelledby="recommendations-heading"
                     >
-                        <div className="max-w-7xl mx-auto">
+                        <div>
                             <header className="flex items-center justify-between mb-4 sm:mb-6">
                                 <h2 
                                     id="recommendations-heading" 
@@ -638,7 +636,7 @@ const Home = () => {
                             aria-labelledby="search-results-heading"
                             aria-live="polite"
                         >
-                            <div className="max-w-7xl mx-auto">
+                            <div>
                                 <header className="flex items-center justify-between mb-4 sm:mb-6">
                                     <h2 
                                         id="search-results-heading" 

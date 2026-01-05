@@ -7,6 +7,7 @@ import Footer from './Footer';
  * Layout component that wraps Header and Footer around child pages
  * This eliminates the need to import Header/Footer on each individual page
  * Includes scroll restoration to top on route changes
+ * Applies max-width constraint (1280px) to all page content
  */
 const Layout = () => {
     const { pathname } = useLocation();
@@ -20,7 +21,9 @@ const Layout = () => {
         <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1">
-                <Outlet />
+                <div className="max-w-7xl mx-auto">
+                    <Outlet />
+                </div>
             </main>
             <Footer />
         </div>
