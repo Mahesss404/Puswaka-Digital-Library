@@ -85,7 +85,7 @@ const BookCatalog = () => {
                 {/* Banner */}
                 <div className="w-full overflow-hidden rounded-lg mb-8 bg-gray-100">
                     <img 
-                        src="src/assets/banner-1.png" 
+                        src="public/banner-1.png" 
                         alt="Book Catalog" 
                         className="w-full h-auto object-cover"
                     />

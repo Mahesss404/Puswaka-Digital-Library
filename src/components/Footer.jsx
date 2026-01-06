@@ -7,7 +7,7 @@ const Footer = () => {
 
     return (
         <footer className="text-gray-400 py-8 sm:py-12 mt-auto">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto px-4 border-t py-4 border-gray-200 sm:px-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Brand Section */}
                     <div className="col-span-1 md:col-span-2">
@@ -94,7 +94,7 @@ const Footer = () => {
                 </div>
 
                 {/* Copyright */}
-                <div className="border-t border-gray-200 mt-8 pt-8 text-center text-sm">
+                <div className="mt-8 pt-8 text-sm">
                     <p>© {currentYear} Puswaka Digital Library. All rights reserved.</p>
                 </div>
             </div>

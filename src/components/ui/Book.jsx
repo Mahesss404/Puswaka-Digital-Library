@@ -39,7 +39,7 @@ const Book = ({
 
   return (
     <div 
-      className={`group relative flex flex-col bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer hover:-translate-y-1' : ''} ${className}`}
+      className={`group relative flex flex-col bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-sm transition-all duration-300 ${onClick ? 'cursor-pointer hover:-translate-y-1' : ''} ${className}`}
       onClick={handleClick}
     >
       {/* Image Container */}
