@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Calendar, CheckCircle, Clock, ArrowLeft } from 'lucide-react';
+import { BookOpen, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { collection, query, where, onSnapshot, doc as firestoreDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
 
 const History = () => {
     const navigate = useNavigate();
@@ -108,15 +109,9 @@ const History = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
             <div>
-                {/* Header */}
+                {/* Breadcrumb */}
                 <div className="mb-6">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span>Back</span>
-                    </button>
+                    <DynamicBreadcrumb className="mb-4" />
                     <h1 className="text-3xl font-bold text-gray-800">Borrowing History</h1>
                     <p className="text-gray-600">Your complete borrowing history and current loans</p>
                 </div>
