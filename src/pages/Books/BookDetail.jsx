@@ -6,6 +6,37 @@ import { db, auth } from '@/lib/firebase';
 import { doc, getDoc, collection, onSnapshot, addDoc, updateDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
+// Helper function to format description into paragraphs (Smart Multi-Level Splitting)
+function formatDescription(text) {
+  if (!text) return null;
+  
+  // First, split by double line breaks (actual paragraphs)
+  const paragraphs = text.split(/\n\n+/);
+  
+  return paragraphs.map((paragraph, pIndex) => {
+    // If paragraph is very long, split into sentences
+    if (paragraph.length > 300) {
+      const sentences = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
+      return (
+        <div key={pIndex} className="mb-4">
+          {sentences.map((sentence, sIndex) => (
+            <p key={`${pIndex}-${sIndex}`} className="mb-2 leading-relaxed">
+              {sentence.trim()}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    
+    // For shorter paragraphs, keep as single block
+    return (
+      <p key={pIndex} className="mb-4 leading-relaxed">
+        {paragraph.trim()}
+      </p>
+    );
+  });
+}
+
 const BookDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,6 +48,7 @@ const BookDetail = () => {
   const [isUserBorrowed, setIsUserBorrowed] = useState(false);
   const [userBorrowInfo, setUserBorrowInfo] = useState(null);
   const [showBorrowModal, setShowBorrowModal] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const [borrowForm, setBorrowForm] = useState({
     userId: '',
     dueDate: ''
@@ -346,9 +378,28 @@ const BookDetail = () => {
                   <FileText className="w-5 h-5 text-gray-500" />
                   <h2 className="text-xl font-semibold text-gray-900">Description</h2>
                 </div>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {book.description || 'No description available for this book.'}
-                </p>
+                <div className="text-sm text-gray-700 md:text-base">
+                  <div className={`${
+                    !showFullDescription ? 'line-clamp-6 md:line-clamp-none' : ''
+                  }`}>
+                    {book.description ? (
+                      <div className="whitespace-pre-wrap">
+                        {formatDescription(book.description)}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 italic">No description available for this book.</p>
+                    )}
+                  </div>
+                  {/* Read More/Less Button (mobile only) */}
+                  {book.description && book.description.length > 300 && (
+                    <button
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                      className="md:hidden mt-2 text-primary font-medium hover:underline focus:outline-none"
+                    >
+                      {showFullDescription ? 'Show Less' : 'Read More'}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* User Borrow Status */}
