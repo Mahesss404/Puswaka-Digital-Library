@@ -3,11 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Search } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useCategoryContext } from "@/contexts/CategoryContext";
 import Book from "@/components/ui/Book";
 import BookSkeleton from "@/components/ui/BookSkeleton";
 
 const BookCatalog = () => {
     const location = useLocation();
+    const { getCategoryName } = useCategoryContext();
     const [books, setBooks] = useState([]);
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -58,12 +60,23 @@ const BookCatalog = () => {
             return;
         }
 
-        const filtered = books.filter(book => 
-            book.category?.toLowerCase().includes(query) ||
-            book.author?.toLowerCase().includes(query) ||
-            book.title?.toLowerCase().includes(query) 
-            // book.isbn?.toLowerCase().includes(query)
-        );
+        const filtered = books.filter(book => {
+            // Check title and author
+            const matchesText = 
+                book.title?.toLowerCase().includes(query) ||
+                book.author?.toLowerCase().includes(query);
+            
+            // Check categories array (new field)
+            const matchesCategories = book.categories?.some(catUuid => {
+                const categoryName = getCategoryName(catUuid);
+                return categoryName?.toLowerCase().includes(query);
+            });
+            
+            // Check legacy category field
+            const matchesLegacyCategory = book.category?.toLowerCase().includes(query);
+            
+            return matchesText || matchesCategories || matchesLegacyCategory;
+        });
         setFilteredBooks(filtered);
     };
 
@@ -123,6 +136,7 @@ const BookCatalog = () => {
                                 title={book.title}
                                 author={book.author}
                                 category={book.category}
+                                categories={book.categories}
                                 available={book.available}
                                 textColor="text-gray-900"
                                 className="h-full w-full"
