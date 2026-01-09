@@ -14,6 +14,7 @@ import Verification from "./pages/Auth/Verification.jsx";
 import BookDetail from './pages/Books/BookDetail';
 import Profile from './pages/Users/Profile.jsx';
 import BookCatalog from './pages/Books/BookCatalog';
+import CategoryCatalog from './pages/Books/CategoryCatalog';
 import History from './pages/Users/History';
 import Notification from './pages/Users/Notification/Notification';
 import NotificationDetails from './pages/Users/Notification/NotificationDetails';
@@ -23,6 +24,8 @@ import DashboardMembers from './pages/Admin/Dashboard/Members';
 import DashboardTransactions from './pages/Admin/Dashboard/Transactions';
 import Landingpage from './Landingpage'
 import Layout from './components/Layout.jsx'
+import Onboarding from './pages/Onboarding.jsx'
+import { CategoryProvider } from './contexts/CategoryContext.jsx'
 
 const router = createBrowserRouter([
     { 
@@ -32,6 +35,15 @@ const router = createBrowserRouter([
     { path: '/login', element: <Login />,},
     { path: '/registration', element: <Registration />,},
     { path: '/verification', element: <Verification />,},
+    // Onboarding route - protected, shown after auth before home
+    { 
+        path: '/onboarding', 
+        element: (
+            <ProtectedRoute>
+                <Onboarding />
+            </ProtectedRoute>
+        ),
+    },
     // User routes - protected, ADMINs redirected to /admin
     // Layout component wraps all protected routes with Header and Footer
     {
@@ -47,6 +59,7 @@ const router = createBrowserRouter([
             { path: '/history', element: <History /> },
             { path: '/book/:id', element: <BookDetail /> },
             { path: '/catalog', element: <BookCatalog /> },
+            { path: '/catalog/:categoryUuid', element: <CategoryCatalog /> },
             { path: '/notification', element: <Notification /> },
             { path: '/notification/:id', element: <NotificationDetails /> },
         ]
@@ -71,7 +84,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <HelmetProvider>
-      <RouterProvider router={router}/>
+      <CategoryProvider>
+        <RouterProvider router={router}/>
+      </CategoryProvider>
     </HelmetProvider>
   </StrictMode>,
 )

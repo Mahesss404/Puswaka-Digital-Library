@@ -1,11 +1,12 @@
 import { Text } from '@/components/ui/text';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Star, AlertCircle, Info, BellRing, ArrowLeft, Calendar, BookOpen } from 'lucide-react';
+import { Search, Star, AlertCircle, Info, BellRing, Calendar, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { collection, query, where, getDocs, onSnapshot, doc as firestoreDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
 
 // --- Utility: Calculate Fine ---
 export const calculateOverdueFine = (dueDate, returnDate = new Date()) => {
@@ -173,17 +174,9 @@ const Notification = () => {
     }
 
     return (
-        <div className="mx-auto w-full bg-white max-w-7xl">
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-                    <Link
-                        to="/home"
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span>Back to Home</span>
-                    </Link>
-                </div>
+        <div className="mx-auto w-full">
+            <div className="px-4 sm:px-6 py-4">
+                <DynamicBreadcrumb />
             </div>
             
             {/* Header / Search */}
