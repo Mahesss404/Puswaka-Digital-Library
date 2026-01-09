@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Phone, BookOpen, LogOut, MapPin, Calendar, CreditCard, CheckCircle } from 'lucide-react';
+import { User, Mail, Phone, BookOpen, ArrowLeft, LogOut, MapPin, Calendar, CreditCard, CheckCircle } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -85,9 +84,15 @@ const Profile = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
             
-            <div className="px-4 py-8">
-                {/* Breadcrumb */}
-                <DynamicBreadcrumb className="mb-6" />
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate('/home')}
+                    className="flex items-center gap-2 text-gray-500 hover:text-primary mb-6 transition-colors duration-300 group"
+                >
+                    <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
+                    <span className="font-medium">Back to Home</span>
+                </button>
 
                 {/* Profile Header Card */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 overflow-hidden mb-6 border border-gray-100">

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BookOpen, User, Tag, FileText, Package, Calendar } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Tag, FileText, Package, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { db, auth } from '@/lib/firebase';
 import { doc, getDoc, collection, onSnapshot, addDoc, updateDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
 
 const BookDetail = () => {
   const { id } = useParams();
@@ -259,13 +258,21 @@ const BookDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <div className="px-4 sm:px-6 py-4">
-        <DynamicBreadcrumb currentPageLabel={book.title} />
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <button
+            onClick={() => navigate('/home')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Home</span>
+          </button>
+        </div>
       </div>
 
       {/* Book Detail Content */}
-      <div className="px-4 sm:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="md:flex">
             {/* Book Cover */}

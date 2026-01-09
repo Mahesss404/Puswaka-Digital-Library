@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useCategoryContext } from "@/contexts/CategoryContext";
 import Book from "@/components/ui/Book";
 import BookSkeleton from "@/components/ui/BookSkeleton";
-import DynamicBreadcrumb from "@/components/DynamicBreadcrumb";
 
 const BookCatalog = () => {
     const location = useLocation();
-    const { getCategoryName } = useCategoryContext();
     const [books, setBooks] = useState([]);
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -61,32 +58,30 @@ const BookCatalog = () => {
             return;
         }
 
-        const filtered = books.filter(book => {
-            // Check title and author
-            const matchesText = 
-                book.title?.toLowerCase().includes(query) ||
-                book.author?.toLowerCase().includes(query);
-            
-            // Check categories array (new field)
-            const matchesCategories = book.categories?.some(catUuid => {
-                const categoryName = getCategoryName(catUuid);
-                return categoryName?.toLowerCase().includes(query);
-            });
-            
-            // Check legacy category field
-            const matchesLegacyCategory = book.category?.toLowerCase().includes(query);
-            
-            return matchesText || matchesCategories || matchesLegacyCategory;
-        });
+        const filtered = books.filter(book => 
+            book.category?.toLowerCase().includes(query) ||
+            book.author?.toLowerCase().includes(query) ||
+            book.title?.toLowerCase().includes(query) 
+            // book.isbn?.toLowerCase().includes(query)
+        );
         setFilteredBooks(filtered);
     };
 
     console.log(books);
 
     return (
-        <div className="bg-white p-4 flex flex-col lg:p-8 gap-4">
-                {/* Breadcrumb */}
-                <DynamicBreadcrumb />
+        <div className="bg-white">
+            <div className="p-4 flex flex-col lg:p-8 gap-4">
+                {/* Back Button */}
+                <div>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-primary hover:text-gray-800 mb-4"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        <p>Back to Home</p>
+                    </button>
+                </div>
 
                 {/* Banner */}
                 <div className="w-full overflow-hidden rounded-lg mb-8 bg-gray-100">
@@ -129,7 +124,6 @@ const BookCatalog = () => {
                                 title={book.title}
                                 author={book.author}
                                 category={book.category}
-                                categories={book.categories}
                                 available={book.available}
                                 textColor="text-gray-900"
                                 className="h-full w-full"
@@ -155,6 +149,7 @@ const BookCatalog = () => {
                         )}
                     </div>
                 )}
+            </div>
         </div>
     );
 };

@@ -1,10 +1,9 @@
 import { Text } from '@/components/ui/text';
 import React from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, AlertCircle } from 'lucide-react';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { ArrowLeft, Calendar, AlertCircle } from 'lucide-react';
 import { calculateOverdueFine } from './Notification';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
 
 const NotificationDetails = () => {
     const { id } = useParams();
@@ -61,9 +60,13 @@ const NotificationDetails = () => {
     return (
         <div className="min-h-screen " >
             <div className="mx-auto w-full max-w-screen-lg px-4 ">
-                <div className="p-4">
-                    <DynamicBreadcrumb currentPageLabel="Details" />
-                </div>
+                <Link 
+                    to="/notification"
+                    className="text-md flex items-center p-4"
+                    >
+                    <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" /> 
+                    Back to Notifications
+                    </Link>
 
                 <Card className="h-full bg-gray-50 flex flex-col gap-2 p-4 ">
                     <CardHeader className="pb-4 bg-gray-200 p-4 rounded-lg">

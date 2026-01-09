@@ -284,22 +284,12 @@ const Verification = () => {
             const userDocRef = doc(db, "users", result.user.uid);
             const userDocSnap = await getDoc(userDocRef);
             const userRole = userDocSnap.exists() ? userDocSnap.data().role : "USER";
-            // check user was completed onboarding
-            const hasCompletedOnboarding = userDocSnap.exists() ? userDocSnap.data().hasCompletedOnboarding : false;
             
-            // Navigate based on role and onboarding status
+            // Navigate based on role
             if (userRole === "ADMIN") {
-                // Admins skip onboarding and go directly to admin dashboard
                 navigate('/admin', { replace: true });
             } else {
-                // Check if user needs to see onboarding
-                if (mode === 'registration' || !hasCompletedOnboarding) {
-                    // New users or users who haven't completed onboarding
-                    navigate('/onboarding', { replace: true });
-                } else {
-                    // Returning users who already completed onboarding
-                    navigate('/home', { replace: true });
-                }
+                navigate('/home', { replace: true });
             }
             
         } catch (err) {
