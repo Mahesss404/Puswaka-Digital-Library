@@ -3,6 +3,7 @@ import {Link, useNavigate} from "react-router-dom";
 import { Helmet } from 'react-helmet-async';
 import Book from '../components/ui/Book.jsx';
 import BookSkeleton from '../components/ui/BookSkeleton.jsx';
+import CategoryButton from '../components/ui/CategoryButton.jsx';
 import {
     ChevronRight,
     Brain,
@@ -16,15 +17,18 @@ import {
 import { collection, query, where, onSnapshot, getDocs, getDoc, doc as firestoreDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 
 const Home = () => {
     const navigate = useNavigate();
+    const { categories, loading: categoriesLoading } = useCategoryContext();
     const [username, setUsername] = useState("");
     const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
     const [selectedGenre, setSelectedGenre] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [showAllCategories, setShowAllCategories] = useState(false);
     const carouselRef = useRef(null);
     const menuRef = useRef(null);
     const searchRef = useRef(null);
@@ -529,36 +533,64 @@ const Home = () => {
                                 </Link>
                             </header>
                             
-                            <nav 
-                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide py-2"
-                                aria-label="Book categories"
-                                role="navigation"
-                            >
-                                {genres.map((genre) => {
-                                    const IconComponent = genre.icon;
-                                    const isSelected = selectedGenre === genre.name;
-                                    
-                                    return (
-                                        <button
-                                            key={genre.id}
-                                            onClick={() => handleGenreClick(genre.name)}
-                                            className={`flex-shrink-0 flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl ring-1 ring-black/5 text-red-500 bg-gray-800 hover:opacity-90 transition-opacity min-w-[120px] sm:min-w-[140px] ${
-                                                isSelected ? 'ring-2 ring-blue-600 ring-offset-2' : ''
-                                            }`}
-                                            aria-pressed={isSelected}
-                                            aria-label={`Filter by ${genre.name} category`}
-                                        >
-                                            <IconComponent 
-                                                className="w-8 h-8 sm:w-10 sm:h-10 text-white mb-2" 
-                                                aria-hidden="true" 
-                                            />
-                                            <span className="text-white text-xs sm:text-sm font-medium text-center">
-                                                {genre.name}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </nav>
+                            {/* Category Grid */}
+                            <div className="relative">
+                                {categoriesLoading ? (
+                                    // Loading skeletons
+                                    <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+                                        {[...Array(4)].map((_, index) => (
+                                            <div key={index} className="flex flex-col items-center gap-3">
+                                                <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse" />
+                                                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : categories.length > 0 ? (
+                                    <>
+                                        {/* Category Grid - Show 4 on mobile, all on desktop */}
+                                        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+                                            {(showAllCategories ? categories : categories.slice(0, 4)).map((category) => (
+                                                <CategoryButton
+                                                    key={category.id}
+                                                    to={`/catalog/${category.id}`}
+                                                    name={category.name}
+                                                    icon="📚"
+                                                />
+                                            ))}
+                                            
+                                            {/* See More Button - Only show on mobile if more than 4 categories */}
+                                            {!showAllCategories && categories.length > 4 && (
+                                                <button
+                                                    onClick={() => setShowAllCategories(true)}
+                                                    className="sm:hidden flex flex-col items-center gap-3 cursor-pointer group"
+                                                >
+                                                    <div className="relative">
+                                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-lg" />
+                                                        <div className="absolute inset-0 flex items-center justify-center transform -translate-y-2 transition-transform duration-300 ease-out group-hover:-translate-y-3 group-hover:scale-110">
+                                                            <div className="text-6xl drop-shadow-lg">•••</div>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-700 text-center transition-colors duration-200 group-hover:text-primary group-hover:font-semibold">
+                                                        See More
+                                                    </span>
+                                                </button>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Show Less Button - Only on mobile when expanded */}
+                                        {showAllCategories && categories.length > 4 && (
+                                            <button
+                                                onClick={() => setShowAllCategories(false)}
+                                                className="sm:hidden mt-4 mx-auto flex items-center gap-2 px-4 py-2 text-sm text-primary hover:text-primary/80 font-medium"
+                                            >
+                                                Show Less
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <p className="text-gray-500 text-sm">No categories available</p>
+                                )}
+                            </div>
                         </div>
                     </section>
 
