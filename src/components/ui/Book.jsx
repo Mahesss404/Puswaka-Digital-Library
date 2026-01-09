@@ -1,5 +1,4 @@
 import React from 'react';
-import { useCategoryContext } from '@/contexts/CategoryContext';
 
 /**
  * Reusable book cover component.
@@ -7,8 +6,7 @@ import { useCategoryContext } from '@/contexts/CategoryContext';
  * - coverSrc: image URL of the book cover
  * - title: book title text
  * - author: author name (optional)
- * - category: book category (optional, legacy field)
- * - categories: array of category UUIDs (optional, new field)
+ * - category: book category (optional)
  * - className: extra classes for the outer wrapper (optional)
  * - textColor: text color class (optional, defaults to text-gray-900)
  * - onClick: click handler function (optional)
@@ -22,8 +20,7 @@ const Book = ({
   coverSrc = '', 
   title, 
   author = '', 
-  category = '',
-  categories = [],
+  category = '', 
   className = '', 
   textColor = 'text-gray-900',
   onClick,
@@ -34,19 +31,11 @@ const Book = ({
   isbn = '',
   showStatusOverlay = true
 }) => {
-  const { getCategoryName } = useCategoryContext();
-  
   const handleClick = () => {
     if (onClick && id) {
       onClick(id);
     }
   };
-
-  // Determine which category to display
-  // Priority: categories array first, then legacy category field
-  const displayCategory = categories?.length > 0 
-    ? getCategoryName(categories[0]) 
-    : category;
 
   return (
     <div 
@@ -63,10 +52,10 @@ const Book = ({
         />
         
         {/* Category Tag (Overlay) */}
-        {displayCategory && (
+        {category && (
           <div className="absolute top-2 right-2">
             <span className="px-2 py-1 text-[10px] font-semibold tracking-wide uppercase bg-blue-100 text-blue-500 backdrop-blur-sm rounded-md">
-              {displayCategory}
+              {category}
             </span>
           </div>
         )}
