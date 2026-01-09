@@ -23,6 +23,7 @@ const Book = ({
   title, 
   author = '', 
   category = '',
+  categories = [], 
   className = '', 
   textColor = 'text-gray-900',
   onClick,
