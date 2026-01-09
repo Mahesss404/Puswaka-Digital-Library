@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Book from "@/components/ui/Book";
 import BookSkeleton from "@/components/ui/BookSkeleton";
+import DynamicBreadcrumb from "@/components/DynamicBreadcrumb";
 
 const BookCatalog = () => {
     const location = useLocation();
@@ -71,16 +72,8 @@ const BookCatalog = () => {
 
     return (
         <div className="bg-white p-4 flex flex-col lg:p-8 gap-4">
-                {/* Back Button */}
-                <div>
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-primary hover:text-gray-800 mb-4"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        <p>Back to Home</p>
-                    </button>
-                </div>
+                {/* Breadcrumb */}
+                <DynamicBreadcrumb />
 
                 {/* Banner */}
                 <div className="w-full overflow-hidden rounded-lg mb-8 bg-gray-100">
