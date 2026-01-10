@@ -49,7 +49,7 @@ const BookCatalog = () => {
     }, [location.state]);
 
     const handleBookClick = (bookId) => {
-        navigate(`/book/${bookId}`);
+        navigate(`/catalog/${bookId}`);
     };
 
     const handleSearch = (e) => {

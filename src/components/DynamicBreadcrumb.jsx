@@ -12,8 +12,7 @@ import {
 // Route mapping configuration
 const routeConfig = {
     '/home': { label: 'Home', parent: null },
-    '/book': { label: 'Book Detail', parent: '/home' },
-    // '/book/:id': { label: 'Book Detail', parent: '/catalog' },
+    '/catalog': { label: 'Catalog', parent: '/home' },
     '/profile': { label: 'Profile', parent: '/home' },
     '/history': { label: 'History', parent: '/home' },
     '/notification': { label: 'Notifications', parent: '/home' },
@@ -25,9 +24,10 @@ const routeConfig = {
  * 
  * @param {Object} props
  * @param {string} props.currentPageLabel - Optional custom label for current page
+ * @param {Array} props.customTrail - Optional custom breadcrumb trail to override automatic generation
  * @param {string} props.className - Optional additional classes
  */
-const DynamicBreadcrumb = ({ currentPageLabel, className = '' }) => {
+const DynamicBreadcrumb = ({ currentPageLabel, customTrail, className = '' }) => {
     const location = useLocation();
     const pathname = location.pathname;
 
@@ -35,7 +35,7 @@ const DynamicBreadcrumb = ({ currentPageLabel, className = '' }) => {
     const buildBreadcrumbTrail = () => {
         const trail = [];
         
-        // Get the base path (e.g., /book/:id -> /book)
+        // Get the base path (e.g., /book/123 -> /book)
         let basePath = pathname;
         const pathSegments = pathname.split('/').filter(Boolean);
         
@@ -44,15 +44,21 @@ const DynamicBreadcrumb = ({ currentPageLabel, className = '' }) => {
             basePath = '/' + pathSegments[0];
         }
 
-        // Find route config
+        // Find route config - try exact match first, then pattern match
         let currentPath = basePath;
         let config = routeConfig[currentPath];
 
-        // If no exact match, check if it's a child route
+        // If no exact match, try matching with :id pattern
         if (!config && pathSegments.length > 1) {
-            // For routes like /notification/:id, use the parent route config
-            currentPath = '/' + pathSegments[0];
-            config = routeConfig[currentPath];
+            const patternPath = basePath + '/:id';
+            if (routeConfig[patternPath]) {
+                currentPath = patternPath;
+                config = routeConfig[patternPath];
+            } else {
+                // Fallback to base path
+                currentPath = basePath;
+                config = routeConfig[currentPath];
+            }
         }
 
         // Build trail from current to root
@@ -98,7 +104,8 @@ const DynamicBreadcrumb = ({ currentPageLabel, className = '' }) => {
         return trail;
     };
 
-    const breadcrumbTrail = buildBreadcrumbTrail();
+    // Use custom trail if provided, otherwise build automatically
+    const breadcrumbTrail = customTrail || buildBreadcrumbTrail();
 
     return (
         <Breadcrumb className={className}>

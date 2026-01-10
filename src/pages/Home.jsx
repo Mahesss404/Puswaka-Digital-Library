@@ -349,7 +349,7 @@ const Home = () => {
     };
 
     const handleBookClick = (bookId) => {
-        navigate(`/book/${bookId}`);
+        navigate(`/catalog/${bookId}`);
     };
 
     const handleSeeAllClick = (books) => {
