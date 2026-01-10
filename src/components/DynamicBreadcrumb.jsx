@@ -13,6 +13,8 @@ import {
 const routeConfig = {
     '/home': { label: 'Home', parent: null },
     '/catalog': { label: 'Catalog', parent: '/home' },
+    '/book/:id': { label: 'Book', parent: '/catalog' },
+    '/category/:categoryUuid': { label: 'Category', parent: '/catalog' },
     '/profile': { label: 'Profile', parent: '/home' },
     '/history': { label: 'History', parent: '/home' },
     '/notification': { label: 'Notifications', parent: '/home' },

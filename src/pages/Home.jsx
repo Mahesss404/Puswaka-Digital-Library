@@ -552,7 +552,7 @@ const Home = () => {
                                             {(showAllCategories ? categories : categories.slice(0, 4)).map((category) => (
                                                 <CategoryButton
                                                     key={category.id}
-                                                    to={`/catalog/${category.id}`}
+                                                    to={`/category/${category.uuid || category.id}`}
                                                     name={category.name}
                                                     icon="📚"
                                                 />
