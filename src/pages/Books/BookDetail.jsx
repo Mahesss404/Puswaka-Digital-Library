@@ -6,10 +6,12 @@ import { db, auth } from '@/lib/firebase';
 import { doc, getDoc, collection, onSnapshot, addDoc, updateDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 
 const BookDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { categories } = useCategoryContext();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
@@ -257,11 +259,44 @@ const BookDetail = () => {
     );
   }
 
+  // Build custom breadcrumb trail with category
+  const buildBreadcrumbTrail = () => {
+    const trail = [
+      { path: '/home', label: 'Home', isCurrentPage: false, isClickable: true },
+      { path: '/catalog', label: 'Catalog', isCurrentPage: false, isClickable: true },
+    ];
+
+    // Add category if book has one
+    if (book?.category && categories.length > 0) {
+      const category = categories.find(cat => cat.name === book.category);
+      const categoryUuid = category?.uuid || category?.id;
+      
+      if (categoryUuid) {
+        trail.push({
+          path: `/category/${categoryUuid}`,
+          label: book.category,
+          isCurrentPage: false,
+          isClickable: true
+        });
+      }
+    }
+
+    // Add book title as current page
+    trail.push({
+      path: `/book/${id}`,
+      label: book.title,
+      isCurrentPage: true,
+      isClickable: false
+    });
+
+    return trail;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
       <div className="px-4 sm:px-6 py-4">
-        <DynamicBreadcrumb currentPageLabel={book.title} />
+        <DynamicBreadcrumb customTrail={buildBreadcrumbTrail()} />
       </div>
 
       {/* Book Detail Content */}
