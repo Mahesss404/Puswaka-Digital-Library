@@ -107,7 +107,7 @@ const History = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 mt-16 pt-4 sm:mt-20">
             <div>
                 {/* Breadcrumb */}
                 <div className="mb-6">

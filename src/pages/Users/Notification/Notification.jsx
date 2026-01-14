@@ -174,7 +174,7 @@ const Notification = () => {
     }
 
     return (
-        <div className="mx-auto w-full">
+        <div className="mx-auto w-full mt-16 pt-4 sm:mt-20">
             <div className="px-4 sm:px-6 py-4">
                 <DynamicBreadcrumb />
             </div>

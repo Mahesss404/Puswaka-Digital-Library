@@ -84,7 +84,7 @@ const BookCatalog = () => {
     console.log(books);
 
     return (
-        <div className="bg-white p-4 flex flex-col lg:p-8 gap-4">
+        <div className="bg-white p-4 flex flex-col lg:p-8 gap-4 mt-16 pt-4 sm:mt-20">
                 {/* Breadcrumb */}
                 <DynamicBreadcrumb />
 

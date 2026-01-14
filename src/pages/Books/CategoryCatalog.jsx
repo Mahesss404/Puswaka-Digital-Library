@@ -140,7 +140,7 @@ const CategoryCatalog = () => {
 
   // Success State
   return (
-    <div className="bg-white min-h-screen p-4 lg:p-8">
+    <div className="bg-white min-h-screen p-4 lg:p-8 mt-16 pt-4 sm:mt-20">
       {/* Breadcrumb Navigation */}
       <nav className="mb-6 flex items-center gap-2 text-sm text-gray-600">
         <Link to="/home" className="hover:text-primary transition-colors">

@@ -325,7 +325,7 @@ const BookDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-16 pt-4 sm:mt-20">
       {/* Breadcrumb */}
       <div className="px-4 sm:px-6 py-4">
         <DynamicBreadcrumb customTrail={buildBreadcrumbTrail()} />

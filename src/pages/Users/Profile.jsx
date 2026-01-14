@@ -83,9 +83,9 @@ const Profile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 mt-16 pt-4 sm:mt-20">
             
-            <div className="px-4 py-8">
+            <div className="p-4">
                 {/* Breadcrumb */}
                 <DynamicBreadcrumb className="mb-6" />
 
