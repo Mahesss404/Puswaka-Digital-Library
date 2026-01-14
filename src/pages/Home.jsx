@@ -386,11 +386,11 @@ const Home = () => {
 
             <main className="min-h-screen bg-background" role="main">
                 {/* Main Content Container */}
-                <article className="p-4 flex flex-col gap-4">
+                <article className="p-4 flex flex-col gap-4 mt-20">
                     
                     {/* Hero Section - User Welcome & Borrowed Books */}
                     <section 
-                        className="bg-primary rounded-2xl px-4 sm:px-6 py-6 sm:py-8"
+                        className="bg-primary rounded-2xl px-4 sm:px-6 py-6"
                         aria-labelledby="welcome-heading"
                     >
                         <div>
@@ -426,7 +426,7 @@ const Home = () => {
                                     >
                                         {isLoadingBorrows ? (
                                             <div 
-                                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2"
+                                                className="flex gap-3 sm:gap-4 overflow-x pb-2"
                                                 aria-busy="true"
                                                 aria-label="Loading borrowed books"
                                             >
@@ -438,7 +438,7 @@ const Home = () => {
                                             </div>
                                         ) : borrowedBooks.length > 0 ? (
                                             <ul 
-                                                className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 list-none p-0 m-0"
+                                                className="flex gap-3 sm:gap-4 pb-2 list-none p-0 m-0"
                                                 role="list"
                                                 aria-label="List of borrowed books"
                                             >
@@ -723,6 +723,19 @@ const Home = () => {
                             </div>
                         </section>
                     )}
+                        <section 
+                            aria-labelledby="borrowed-books-widget"
+                        >
+                            <div className="w-full overflow-hidden rounded-lg mb-8 bg-gray-100">
+                                <img 
+                                    src="public/banner-2.png" 
+                                    alt="Book Catalog" 
+                                    className="w-full h-auto object-cover"
+                                />
+                            </div>
+                            
+                            
+                        </section>
                 </article>
             </main>
         </>
