@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { collection, query, where, onSnapshot, doc as firestoreDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
@@ -128,7 +128,7 @@ const History = () => {
                         <ul className="divide-y divide-gray-200">
                             {borrowHistory.map((borrow) => (
                                 <li key={borrow.id} className="p-4 hover:bg-gray-50">
-                                    <div className="flex items-start space-x-4">
+                                    <Link to={`/catalog/${borrow.book.id}`} className="flex items-start space-x-4 cursor-pointer">
                                         <div className="flex-shrink-0">
                                             {borrow.book.coverSrc ? (
                                                 <img
@@ -143,7 +143,7 @@ const History = () => {
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-lg font-medium text-gray-900 truncate">
+                                            <h3 className="text-lg font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                                                 {borrow.book.title}
                                             </h3>
                                             <p className="text-sm text-gray-500">
@@ -176,7 +176,7 @@ const History = () => {
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
