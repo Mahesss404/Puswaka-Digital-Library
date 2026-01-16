@@ -523,14 +523,14 @@ const Home = () => {
                                 >
                                     Explore by Category
                                 </h2>
-                                <Link 
+                                {/* <Link 
                                     to="/catalog"
                                     className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                                     aria-label="See all book categories"
                                 >
                                     See all
                                     <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                                </Link>
+                                </Link> */}
                             </header>
                             
                             {/* Category Grid */}
