@@ -65,6 +65,39 @@ const Landingpage = () => {
         }
     ];
 
+    const howToUse = [
+        {
+            step: "1",
+            title: "Register Your Account",
+            description: "Sign up using your school ID to create an account and start browsing our collection.",
+            icon: "register"
+        },
+        {
+            step: "2",
+            title: "Find Your Book",
+            description: "Browse our catalog and search for books by title, author, or category.",
+            icon: "search"
+        },
+        {
+            step: "3",
+            title: "Locate the Book",
+            description: "Visit the school library and find the book on the rack using the location shown in the app.",
+            icon: "location"
+        },
+        {
+            step: "4",
+            title: "Borrow from Admin",
+            description: "Go to the admin desk with your selected book to complete the borrowing process.",
+            icon: "admin"
+        },
+        {
+            step: "5",
+            title: "Return On Time",
+            description: "Take your book home and return it before the deadline to avoid late fees.",
+            icon: "return"
+        }
+    ];
+
     const benefits = [
         "Unlimited access to digital books",
         "No late fees or penalties",
@@ -133,6 +166,9 @@ const Landingpage = () => {
                             <a href="#features" className={`text-sm font-medium transition-colors hover:text-primary ${
                                 isScrolled ? 'text-gray-600' : 'text-gray-700'
                             }`}>Features</a>
+                            <a href="#how-to-use" className={`text-sm font-medium transition-colors hover:text-primary ${
+                                isScrolled ? 'text-gray-600' : 'text-gray-700'
+                            }`}>How to Use</a>
                             <a href="#benefits" className={`text-sm font-medium transition-colors hover:text-primary ${
                                 isScrolled ? 'text-gray-600' : 'text-gray-700'
                             }`}>Benefits</a>
@@ -176,6 +212,7 @@ const Landingpage = () => {
                     }`}>
                         <div className="flex flex-col gap-2 pt-2">
                             <a href="#features" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">Features</a>
+                            <a href="#how-to-use" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">How to Use</a>
                             <a href="#benefits" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">Benefits</a>
                             <a href="#faq" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">FAQ</a>
                             <hr className="my-2 border-gray-200" />
@@ -317,6 +354,107 @@ const Landingpage = () => {
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            </section>
+
+            {/* How to Use Section */}
+            <section id="how-to-use" className="py-16 sm:py-24 bg-gradient-to-br from-blue-50 via-white to-primary/5 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Section Header */}
+                    <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium mb-4">
+                            <Sparkles className="w-4 h-4" />
+                            How It Works
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                            Simple Steps to
+                            <span className="text-primary"> Borrow Books</span>
+                        </h2>
+                        <p className="text-gray-600">
+                            Follow these easy steps to start borrowing books from our digital library system.
+                        </p>
+                    </div>
+
+                    {/* Steps Flow */}
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4 mb-12">
+                        {howToUse.map((item, index) => (
+                            <div key={index} className="relative">
+                                {/* Connector Line (desktop only) */}
+                                {index < howToUse.length - 1 && (
+                                    <div className="hidden lg:block absolute top-16 left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/30 to-primary/10 z-0" />
+                                )}
+                                
+                                <div className="relative group bg-white rounded-2xl p-6 ring-1 ring-gray-100 hover:ring-primary/20 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-2 transition-all duration-300 h-full">
+                                    {/* Step Number Badge */}
+                                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                                        <span className="text-white text-sm font-bold">{item.step}</span>
+                                    </div>
+
+                                    {/* Icon */}
+                                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/10 to-blue-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        {item.icon === "register" && (
+                                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        )}
+                                        {item.icon === "search" && (
+                                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                            </svg>
+                                        )}
+                                        {item.icon === "location" && (
+                                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        )}
+                                        {item.icon === "admin" && (
+                                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        )}
+                                        {item.icon === "return" && (
+                                            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        )}
+                                    </div>
+
+                                    {/* Content */}
+                                    <h3 className="text-base font-semibold text-gray-900 mb-2 text-center">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 leading-relaxed text-center">
+                                        {item.description}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Important Note */}
+                    <div className="max-w-3xl mx-auto">
+                        <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-2xl p-6 relative overflow-hidden">
+                            {/* Background decoration */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-300/10 rounded-full blur-2xl" />
+                            
+                            <div className="relative flex items-start gap-4">
+                                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                        <span>⚠️</span> Important Notice
+                                    </h3>
+                                    <p className="text-gray-700 leading-relaxed">
+                                        Please return books before the due date. <strong className="text-orange-700">Late returns will incur a fine of Rp 10,000 per day</strong> for each overdue book. Make sure to check your borrowing deadline and set reminders to avoid any penalties.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -548,6 +686,7 @@ const Landingpage = () => {
                             <h4 className="text-white font-semibold mb-4">Quick Links</h4>
                             <ul className="space-y-2">
                                 <li><a href="#features" className="text-sm hover:text-white transition-colors">Features</a></li>
+                                <li><a href="#how-to-use" className="text-sm hover:text-white transition-colors">How to Use</a></li>
                                 <li><a href="#benefits" className="text-sm hover:text-white transition-colors">Benefits</a></li>
                                 <li><a href="#faq" className="text-sm hover:text-white transition-colors">FAQ</a></li>
                             </ul>
