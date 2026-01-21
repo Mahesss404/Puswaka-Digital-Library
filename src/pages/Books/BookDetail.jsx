@@ -7,6 +7,7 @@ import { doc, getDoc, collection, onSnapshot, addDoc, updateDoc, query, where, g
 import { onAuthStateChanged } from 'firebase/auth';
 import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
 import { useCategoryContext } from '@/contexts/CategoryContext';
+import ShareButton from '@/components/ShareButton';
 
 // Helper function to format description into paragraphs (Smart Multi-Level Splitting)
 function formatDescription(text) {
@@ -351,9 +352,16 @@ const BookDetail = () => {
 
             {/* Book Information */}
             <div className="md:w-2/3 p-8">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                {book.title}
-              </h1>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 flex-1">
+                  {book.title}
+                </h1>
+                <ShareButton 
+                  bookId={book.id} 
+                  bookTitle={book.title} 
+                  bookAuthor={book.author} 
+                />
+              </div>
 
               {/* Author */}
               <div className="flex items-center gap-2 mb-4">
