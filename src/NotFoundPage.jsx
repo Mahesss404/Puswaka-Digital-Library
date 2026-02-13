@@ -9,7 +9,7 @@ const NotFound = () => {
       <Card className="max-w-md w-full text-center p-6">
         <p className="text-lg font-semibold mb-4">Oops! Page Not Found.</p>
         <p className="mb-6">We couldn't find the page you were looking for.</p>
-        <Link to="/">
+        <Link to="/home">
           <Button variant="default">Go Back Home</Button>
         </Link>
       </Card>
