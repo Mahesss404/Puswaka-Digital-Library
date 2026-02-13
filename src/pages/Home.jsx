@@ -541,18 +541,15 @@ const Home = () => {
                             <div className="relative">
                                 {categoriesLoading ? (
                                     // Loading skeletons
-                                    <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                                         {[...Array(4)].map((_, index) => (
-                                            <div key={index} className="flex flex-col items-center gap-3">
-                                                <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse" />
-                                                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
-                                            </div>
+                                            <div key={index} className="w-full h-32 rounded-lg bg-gray-200 animate-pulse" />
                                         ))}
                                     </div>
                                 ) : categories.length > 0 ? (
                                     <>
                                         {/* Category Grid - Show 4 on mobile, all on desktop */}
-                                        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-4">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                                             {(showAllCategories ? categories : categories.slice(0, 4)).map((category) => (
                                                 <CategoryButton
                                                     key={category.id}
@@ -566,17 +563,13 @@ const Home = () => {
                                             {!showAllCategories && categories.length > 4 && (
                                                 <button
                                                     onClick={() => setShowAllCategories(true)}
-                                                    className="sm:hidden flex flex-col items-center gap-3 cursor-pointer group"
+                                                    className="sm:hidden relative w-full h-32 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl active:scale-95"
                                                 >
-                                                    <div className="relative">
-                                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-lg" />
-                                                        <div className="absolute inset-0 flex items-center justify-center transform -translate-y-2 transition-transform duration-300 ease-out group-hover:-translate-y-3 group-hover:scale-110">
-                                                            <div className="text-6xl drop-shadow-lg">•••</div>
-                                                        </div>
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+                                                    <div className="absolute inset-0 bg-black/20" />
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <span className="text-gray-700 font-bold text-lg">See More</span>
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-700 text-center transition-colors duration-200 group-hover:text-primary group-hover:font-semibold">
-                                                        See More
-                                                    </span>
                                                 </button>
                                             )}
                                         </div>
