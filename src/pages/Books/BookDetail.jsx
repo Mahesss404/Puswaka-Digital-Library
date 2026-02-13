@@ -8,6 +8,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
 import { useCategoryContext } from '@/contexts/CategoryContext';
 import ShareButton from '@/components/ShareButton';
+import { getCategoryIdFromBook } from '@/utils/bookUtils';
 
 // Helper function to format description into paragraphs (Smart Multi-Level Splitting)
 function formatDescription(text) {
@@ -41,7 +42,8 @@ function formatDescription(text) {
 }
 
 const BookDetail = () => {
-  const { id } = useParams();
+  const { categoryId, bookId } = useParams();
+  const id = bookId; // Keep id for backward compatibility in existing code
   const navigate = useNavigate();
   const { categories } = useCategoryContext();
   const [book, setBook] = useState(null);
@@ -359,7 +361,8 @@ const BookDetail = () => {
                 <ShareButton 
                   bookId={book.id} 
                   bookTitle={book.title} 
-                  bookAuthor={book.author} 
+                  bookAuthor={book.author}
+                  categoryId={categoryId || getCategoryIdFromBook(book, categories)}
                 />
               </div>
 

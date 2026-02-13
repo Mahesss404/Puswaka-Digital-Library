@@ -18,6 +18,7 @@ import { collection, query, where, onSnapshot, getDocs, getDoc, doc as firestore
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useCategoryContext } from '@/contexts/CategoryContext';
+import { getCategoryIdFromBook, getBookDetailPath } from '@/utils/bookUtils';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -349,7 +350,10 @@ const Home = () => {
     };
 
     const handleBookClick = (bookId) => {
-        navigate(`/catalog/${bookId}`);
+        // Find the book to get its category
+        const book = allBooksFromDB.find(b => b.id === bookId);
+        const categoryId = book ? getCategoryIdFromBook(book, categories) : 'uncategorized';
+        navigate(getBookDetailPath(bookId, categoryId));
     };
 
     const handleSeeAllClick = (books) => {

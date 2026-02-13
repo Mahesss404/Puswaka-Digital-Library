@@ -4,6 +4,8 @@ import { Menu, Search, X, Bell, Home, BookOpen, Bookmark, User, Settings, Histor
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
+import { useCategoryContext } from '@/contexts/CategoryContext';
+import { getCategoryIdFromBook, getBookDetailPath } from '@/utils/bookUtils';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,6 +18,7 @@ const Header = () => {
     const searchRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
+    const { categories } = useCategoryContext();
 
     // Menu items with icons
     const menuItems = [
@@ -96,7 +99,8 @@ const Header = () => {
 
     // Handle search result click
     const handleSearchResultClick = (book) => {
-        navigate(`/book/${book.id}`);
+        const categoryId = getCategoryIdFromBook(book, categories);
+        navigate(getBookDetailPath(book.id, categoryId));
         setSearchQuery('');
         setSearchResults([]);
         setIsSearchOpen(false);

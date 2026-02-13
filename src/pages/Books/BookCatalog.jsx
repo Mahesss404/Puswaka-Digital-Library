@@ -4,13 +4,14 @@ import { Search } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useCategoryContext } from "@/contexts/CategoryContext";
+import { getCategoryIdFromBook, getBookDetailPath } from "@/utils/bookUtils";
 import Book from "@/components/ui/Book";
 import BookSkeleton from "@/components/ui/BookSkeleton";
 import DynamicBreadcrumb from "@/components/DynamicBreadcrumb";
 
 const BookCatalog = () => {
     const location = useLocation();
-    const { getCategoryName } = useCategoryContext();
+    const { getCategoryName, categories } = useCategoryContext();
     const [books, setBooks] = useState([]);
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -49,7 +50,10 @@ const BookCatalog = () => {
     }, [location.state]);
 
     const handleBookClick = (bookId) => {
-        navigate(`/catalog/${bookId}`);
+        // Find the book to get its category
+        const book = books.find(b => b.id === bookId);
+        const categoryId = book ? getCategoryIdFromBook(book, categories) : 'uncategorized';
+        navigate(getBookDetailPath(bookId, categoryId));
     };
 
     const handleSearch = (e) => {

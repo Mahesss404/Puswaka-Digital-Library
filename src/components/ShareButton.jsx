@@ -6,14 +6,15 @@ import { Share2, Check } from 'lucide-react';
  * @param {string} bookId - The unique ID of the book
  * @param {string} bookTitle - The title of the book
  * @param {string} bookAuthor - The author of the book (optional)
+ * @param {string} categoryId - The category ID for the book URL (optional)
  */
-const ShareButton = ({ bookId, bookTitle, bookAuthor = '' }) => {
+const ShareButton = ({ bookId, bookTitle, bookAuthor = '', categoryId = 'uncategorized' }) => {
   const [copied, setCopied] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
   const handleShare = async () => {
-    // Generate the sharing link
-    const shareUrl = `${window.location.origin}/catalog/${bookId}`;
+    // Generate the sharing link with category
+    const shareUrl = `${window.location.origin}/catalog/${categoryId}/${bookId}`;
     
     // Create share text
     const shareText = bookAuthor 

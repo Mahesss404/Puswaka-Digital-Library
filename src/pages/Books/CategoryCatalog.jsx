@@ -72,7 +72,7 @@ const CategoryCatalog = () => {
   }, [category, categoriesLoading]);
 
   const handleBookClick = (bookId) => {
-    navigate(`/book/${bookId}`);
+    navigate(`/catalog/${categoryUuid}/${bookId}`);
   };
 
   const handleRetry = () => {

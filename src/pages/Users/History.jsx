@@ -5,9 +5,12 @@ import { collection, query, where, onSnapshot, doc as firestoreDoc, getDoc } fro
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
+import { useCategoryContext } from '@/contexts/CategoryContext';
+import { getCategoryIdFromBook, getBookDetailPath } from '@/utils/bookUtils';
 
 const History = () => {
     const navigate = useNavigate();
+    const { categories } = useCategoryContext();
     const [userId, setUserId] = useState(null);
     const [borrowHistory, setBorrowHistory] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -126,9 +129,13 @@ const History = () => {
                         </div>
                     ) : (
                         <ul className="divide-y divide-gray-200">
-                            {borrowHistory.map((borrow) => (
+                            {borrowHistory.map((borrow) => {
+                                const categoryId = getCategoryIdFromBook(borrow.book, categories);
+                                const bookDetailPath = getBookDetailPath(borrow.book.id, categoryId);
+                                
+                                return (
                                 <li key={borrow.id} className="p-4 hover:bg-gray-50">
-                                    <Link to={`/catalog/${borrow.book.id}`} className="flex items-start space-x-4 cursor-pointer">
+                                    <Link to={bookDetailPath} className="flex items-start space-x-4 cursor-pointer">
                                         <div className="flex-shrink-0">
                                             {borrow.book.coverSrc ? (
                                                 <img
@@ -178,7 +185,8 @@ const History = () => {
                                         </div>
                                     </Link>
                                 </li>
-                            ))}
+                                );
+                            })}
                         </ul>
                     )}
                 </div>

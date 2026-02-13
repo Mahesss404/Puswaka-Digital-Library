@@ -59,7 +59,7 @@ const router = createBrowserRouter([
             { path: '/history', element: <History /> },
             { path: '/catalog', element: <BookCatalog /> },
             { path: '/category/:categoryUuid', element: <CategoryCatalog /> },
-            { path: '/catalog/:id', element: <BookDetail /> },
+            { path: '/catalog/:categoryId/:bookId', element: <BookDetail /> },
             { path: '/notification', element: <Notification /> },
             { path: '/notification/:id', element: <NotificationDetails /> },
         ]
