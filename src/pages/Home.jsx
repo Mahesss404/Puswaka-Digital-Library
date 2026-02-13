@@ -555,7 +555,6 @@ const Home = () => {
                                                     key={category.id}
                                                     to={`/category/${category.uuid || category.id}`}
                                                     name={category.name}
-                                                    icon="📚"
                                                 />
                                             ))}
                                             

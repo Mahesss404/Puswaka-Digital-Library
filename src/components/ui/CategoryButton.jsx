@@ -14,7 +14,6 @@ import { Link } from 'react-router-dom';
  */
 const CategoryButton = ({ 
   to, 
-  icon = '📚', 
   name, 
   className = '' 
 }) => {
@@ -24,7 +23,7 @@ const CategoryButton = ({
   
   return (
     <Link to={to} className={`group ${className}`}>
-      <div className="relative w-full h-32 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-out group-hover:scale-105 group-hover:shadow-xl group-active:scale-95">
+      <div className="relative w-full h-32 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ease-out group-hover:scale-105 group-hover:shadow-xl group-active:scale-95">
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
