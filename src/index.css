@@ -1,17 +1,27 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
-
 :root {
-    --color-primary: #4995ED;   /* blue-600 */
-    --color-secondary: #10b981; /* emerald-500 */
-    --color-background: #f9f9f9;
-    --color-text: #111827;
+  --color-primary: #4995ed; /* blue-600 */
+  --color-secondary: #10b981; /* emerald-500 */
+  --color-background: #f9f9f9;
+  --color-text: #111827;
 }
 
 @theme {
-    --color-primary: #4995ED;
-    --color-secondary: #10b981;
-    --color-background: #f9f9f9;
-    --color-text: #111827;
+  --color-primary: #4995ed;
+  --color-secondary: #10b981;
+  --color-background: #f9f9f9;
+  --color-text: #111827;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }

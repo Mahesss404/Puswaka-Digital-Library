@@ -8,18 +8,16 @@ import { Link } from 'react-router-dom';
  * 
  * Props:
  * - to: Link destination (string)
- * - icon: Not used in new design (kept for backwards compatibility)
  * - name: Category name (string)
+ * - image: Background image path (string) - defaults to /banner-1.png
  * - className: Additional classes (string)
  */
 const CategoryButton = ({ 
   to, 
-  name, 
+  name,
+  image = '',
   className = '' 
 }) => {
-  // Use banner images as example backgrounds (cycling through available images)
-  const backgroundImages = ['/banner-1.png', '/banner-2.png'];
-  const randomImage = backgroundImages[Math.floor(Math.random() * backgroundImages.length)];
   
   return (
     <Link to={to} className={`group ${className}`}>
@@ -27,7 +25,7 @@ const CategoryButton = ({
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-110"
-          style={{ backgroundImage: `url(${randomImage})` }}
+          style={{ backgroundImage: `url(${image})` }}
         />
         
         {/* Dark Overlay */}
