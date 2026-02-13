@@ -59,7 +59,7 @@ const NotificationDetails = () => {
     }
 
     return (
-        <div className="min-h-screen " >
+        <div className="min-h-screen mt-8" >
             <div className="mx-auto w-full max-w-screen-lg px-4 ">
                 <div className="p-4">
                     <DynamicBreadcrumb currentPageLabel="Details" />
@@ -108,7 +108,7 @@ const NotificationDetails = () => {
                             {showFine && overdueDays > 0 && (
                                 <>
                                     <div className="my-2 border-t border-gray-200"></div>
-                                    <p className="text-red-700"><strong>Tax Details (Denda):</strong></p>
+                                    <p className="text-red-700"><strong>Fine Details (Denda):</strong></p>
                                     <p><strong>Days Overdue:</strong> {overdueDays} days</p>
                                     <p><strong>Fine Rate:</strong> Rp 1.000 / day</p>
                                     <p><strong>Total Fine:</strong> <span className="font-bold text-red-600">Rp {fineAmount.toLocaleString()}</span></p>
