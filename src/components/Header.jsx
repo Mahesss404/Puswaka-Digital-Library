@@ -180,17 +180,17 @@ const Header = () => {
     }, []);
 
     return (
-        <header className="bg-[#4995ED] shadow-md px-4 sm:px-6 py-3 fixed w-full sm:py-4 z-50 top-0">
+        <header className="bg-white border-b border-gray-300  px-4 sm:px-6 py-3 fixed w-full sm:py-4 z-50 top-0">
             <div className="flex items-center justify-between max-w-7xl mx-auto">
                 {/* Logo - Left Side */}
                 <Link to="/home" className="flex items-center gap-2 sm:gap-3 group">
-                    <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg group-hover:bg-white/30 transition-all duration-300">
-                        <Library className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                    <div className="bg-primary/20 backdrop-blur-sm p-2 rounded-lg group-hover:bg-primary/30 transition-all duration-300">
+                        <Library className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                     </div>
                     {/* Logo Title - Hidden on mobile, visible on desktop */}
                     <div className="hidden md:flex flex-col">
-                        <span className="text-white font-bold text-lg leading-tight">Puswaka</span>
-                        <span className="text-white/90 text-xs font-medium">Digital Library</span>
+                        <span className="text-primary font-bold text-lg leading-tight">Puswaka</span>
+                        <span className="text-primary/90 text-xs font-medium">Digital Library</span>
                     </div>
                 </Link>
 
@@ -205,13 +205,13 @@ const Header = () => {
                                 value={searchQuery}
                                 onChange={handleSearchChange}
                                 onFocus={() => setIsSearchOpen(true)}
-                                className="w-32 sm:w-48 md:w-64 px-3 sm:px-4 py-2 pl-9 sm:pl-10 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/30 transition-all duration-300 text-sm sm:text-base"
+                                className="w-32 sm:w-48 md:w-64 px-3 sm:px-4 py-2 pl-9 sm:pl-10 rounded-lg bg-white backdrop-blur-sm border border-gray-400 text-gray-500 placeholder-gray-300 focus:outline-none focus:ring-1 focus:border-gray-300 sm:text-base"
                             />
-                            <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/80" />
+                            <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
                             {searchQuery && (
                                 <button
                                     onClick={handleClearSearch}
-                                    className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 text-white/80 hover:text-white transition-colors"
+                                    className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
@@ -220,7 +220,7 @@ const Header = () => {
 
                         {/* Search Results Dropdown */}
                         {isSearchOpen && (
-                            <div className="absolute right-0 mt-2 w-72 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-white/20 py-2 z-50 max-h-96 overflow-y-auto animate-fadeIn">
+                            <div className="absolute right-0 mt-2 w-72 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-gray-300 py-2 z-50 max-h-96 overflow-y-auto animate-fadeIn">
                                 {isSearching ? (
                                     <div className="flex justify-center items-center p-4">
                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#4995ED]"></div>
@@ -248,14 +248,14 @@ const Header = () => {
                     {/* Notification Bell */}
                     <Link 
                         to="/notification" 
-                        className="p-2 hover:bg-white/20 rounded-lg transition-all duration-300 relative backdrop-blur-sm"
+                        className="p-2 hover:bg-primary/20 rounded-lg transition-all duration-300 relative backdrop-blur-sm"
                         aria-label="Notifications"
                     >
-                        <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                        <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
                         {unreadCount > 0 && (
                             <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-primary"></span>
                             </span>
                         )}
                     </Link>
@@ -264,10 +264,10 @@ const Header = () => {
                     <div className="relative" ref={menuRef}>
                         <button 
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="p-2 hover:bg-white/20 rounded-lg transition-all duration-300 backdrop-blur-sm"
+                            className="p-2 hover:bg-primary/20 rounded-lg transition-all duration-300 backdrop-blur-sm"
                             aria-label="Menu"
                         >
-                            <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                            <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
                         </button>
                         
                         {/* Menu Popup */}
