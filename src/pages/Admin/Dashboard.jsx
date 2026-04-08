@@ -270,7 +270,7 @@ export default function Dashboard() {
 
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-[#F5F7FA]">
       {/* Mobile Overlay - Blocks access on mobile devices */}
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-sm px-4 py-6 lg:hidden">
         <div className="w-full max-w-sm rounded-xl bg-white p-5 sm:p-6 text-center shadow-2xl">
@@ -354,9 +354,9 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className={`flex-1 p-8 text-neutral-900 font-sans transition-all duration-300 ${sidebarOpen ? 'ml-56' : 'ml-16'}`}>
+      <div className={` flex-1 text-neutral-900 transition-all duration-300  ${sidebarOpen ? 'ml-56' : 'ml-16'}`}>
       {/* Header */}
-      <header className="mb-8 flex items-center justify-between border-b pb-4">
+      <header className="mb-8 flex items-center justify-between bg-white p-4">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -371,11 +371,11 @@ export default function Dashboard() {
 
       {/* Render nested routes via Outlet, or dashboard content if at /admin */}
       {currentPath === '/admin' ? (
-      <>
+      <div className="p-8">
       {/* Stats Cards Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
         {/* Card 1: Users */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl font-manrope border border-[#DFEAF2] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-neutral-500">Total Users</h3>
             <span className="inline-flex items-center justify-center rounded-full bg-blue-100 p-2 text-blue-700">
@@ -396,7 +396,7 @@ export default function Dashboard() {
         </div>
 
         {/* Card 2: Books */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#DFEAF2] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-neutral-500">Total Books</h3>
              <span className="inline-flex items-center justify-center rounded-full bg-emerald-100 p-2 text-emerald-700">
@@ -417,7 +417,7 @@ export default function Dashboard() {
         </div>
 
         {/* Card 3: Borrows */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#DFEAF2] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-neutral-500">Activity (This Week)</h3>
              <span className="inline-flex items-center justify-center rounded-full bg-purple-100 p-2 text-purple-700">
@@ -441,16 +441,16 @@ export default function Dashboard() {
       
 
       {/* Chart Section */}
-      <div className="mb-8 rounded-xl border bg-white p-6 shadow-sm">
+      <div className="mb-8 rounded-xl border border-[#DFEAF2] bg-white p-6 shadow-sm ">
         <div className="mb-6 flex flex-col justify-between sm:flex-row sm:items-center">
           <div>
             <h2 className="text-lg font-semibold">Total Visitors</h2>
             <p className="text-sm text-neutral-500">Total for the last 3 months</p>
           </div>
           <div className="mt-4 flex gap-2 sm:mt-0">
-             <button className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 transition-colors">Last 3 months</button>
-             <button className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 transition-colors">Last 30 days</button>
-             <button className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 transition-colors">Last 7 days</button>
+             <button className="rounded-md border border-[#DFEAF2] px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 transition-colors">Last 3 months</button>
+             <button className="rounded-md border border-[#DFEAF2] px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 transition-colors">Last 30 days</button>
+             <button className="rounded-md border border-[#DFEAF2] px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 transition-colors">Last 7 days</button>
           </div>
         </div>
         
@@ -544,8 +544,8 @@ export default function Dashboard() {
       )}
 
        {/* Transactions Table */}
-       <div className="rounded-xl bg-white border shadow-sm">
-          <div className="p-6 border-b flex justify-between items-center">
+       <div className="rounded-xl bg-white border border-[#DFEAF2] shadow-sm">
+          <div className="p-6 border-b border-[#DFEAF2] flex justify-between items-center">
              <div>
                 <h2 className="text-lg font-semibold">Transactions Log</h2>
                 <p className="text-sm text-neutral-500">Recent borrowings and returns.</p>
@@ -556,7 +556,7 @@ export default function Dashboard() {
                     <input 
                         type="text" 
                         placeholder="Search books or users..." 
-                        className="h-9 w-64 rounded-md border border-neutral-200 bg-neutral-50 pl-9 pr-4 text-sm outline-none focus:border-neutral-400"
+                        className="h-9 w-64 rounded-md border border-[#DFEAF2] bg-neutral-50 pl-9 pr-4 text-sm outline-none focus:border-neutral-400"
                     />
                  </div>
              </div>
@@ -564,7 +564,7 @@ export default function Dashboard() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-neutral-50 text-neutral-500 border-b">
+              <thead className="bg-neutral-50 text-neutral-500 border-b border-[#DFEAF2]">
                 <tr>
                    <th className="px-6 py-3 font-medium">User Name</th>
                    <th className="px-6 py-3 font-medium">User Contact</th>
@@ -681,56 +681,56 @@ export default function Dashboard() {
            </div>
 
            {/* Pagination */}
-           <div className="flex items-center justify-between px-6 py-4 border-t bg-neutral-900 text-neutral-100 rounded-b-xl">
-              <div className="text-sm text-neutral-400">
+           <div className="flex items-center justify-between px-6 py-4 border-t bg-primary text-white rounded-b-xl">
+              <div className="text-sm text-white/70">
                  0 of {transactions.length} row(s) selected.
               </div>
               <div className="flex items-center gap-6">
                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-neutral-300">Rows per page</span>
+                    <span className="text-sm text-white/80">Rows per page</span>
                     <select
                        value={rowsPerPage}
                        onChange={(e) => {
                           setRowsPerPage(Number(e.target.value));
                           setCurrentPage(1);
                        }}
-                       className="h-8 w-16 rounded-md border border-neutral-700 bg-neutral-800 px-2 text-sm text-neutral-100 outline-none focus:border-neutral-500"
+                       className="h-8 w-16 rounded-md border border-white/30 bg-white/15 px-2 text-sm text-white outline-none focus:border-white/50"
                     >
-                       <option value={5}>5</option>
-                       <option value={10}>10</option>
-                       <option value={20}>20</option>
-                       <option value={50}>50</option>
+                       <option value={5} className="text-neutral-900">5</option>
+                       <option value={10} className="text-neutral-900">10</option>
+                       <option value={20} className="text-neutral-900">20</option>
+                       <option value={50} className="text-neutral-900">50</option>
                     </select>
                  </div>
-                 <div className="text-sm text-neutral-300">
+                 <div className="text-sm text-white/80">
                     Page {currentPage} of {Math.ceil(transactions.length / rowsPerPage) || 1}
                  </div>
                  <div className="flex items-center gap-1">
                     <button
                        onClick={() => setCurrentPage(1)}
                        disabled={currentPage === 1}
-                       className="h-8 w-8 rounded-md border border-neutral-700 bg-neutral-800 flex items-center justify-center text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                       className="h-8 w-8 rounded-md border border-white/30 bg-white/15 flex items-center justify-center text-white hover:bg-white/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                        <ChevronsLeft className="h-4 w-4" />
                     </button>
                     <button
                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                        disabled={currentPage === 1}
-                       className="h-8 w-8 rounded-md border border-neutral-700 bg-neutral-800 flex items-center justify-center text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                       className="h-8 w-8 rounded-md border border-white/30 bg-white/15 flex items-center justify-center text-white hover:bg-white/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                        <ChevronLeft className="h-4 w-4" />
                     </button>
                     <button
                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(transactions.length / rowsPerPage)))}
                        disabled={currentPage >= Math.ceil(transactions.length / rowsPerPage)}
-                       className="h-8 w-8 rounded-md border border-neutral-700 bg-neutral-800 flex items-center justify-center text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                       className="h-8 w-8 rounded-md border border-white/30 bg-white/15 flex items-center justify-center text-white hover:bg-white/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                        <ChevronRight className="h-4 w-4" />
                     </button>
                     <button
                        onClick={() => setCurrentPage(Math.ceil(transactions.length / rowsPerPage))}
                        disabled={currentPage >= Math.ceil(transactions.length / rowsPerPage)}
-                       className="h-8 w-8 rounded-md border border-neutral-700 bg-neutral-800 flex items-center justify-center text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                       className="h-8 w-8 rounded-md border border-white/30 bg-white/15 flex items-center justify-center text-white hover:bg-white/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                        <ChevronsRight className="h-4 w-4" />
                     </button>
@@ -738,7 +738,7 @@ export default function Dashboard() {
               </div>
            </div>
          </div>
-      </>
+      </div>
       ) : (
         <Outlet />
       )}

@@ -300,7 +300,7 @@ const BooksManagement = () => {
               fetchBookByISBN(barcode);
             }
           }
-          if (error && error.name !== 'NotFoundException') {
+          if (error && !(error.name || '').includes('NotFoundException')) {
             console.error('Scan error:', error);
           }
         }

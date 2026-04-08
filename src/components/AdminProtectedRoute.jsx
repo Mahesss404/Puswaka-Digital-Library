@@ -63,7 +63,7 @@ const AdminProtectedRoute = ({ children }) => {
     }
 
     if (!authState.isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     if (!authState.isAdmin) {

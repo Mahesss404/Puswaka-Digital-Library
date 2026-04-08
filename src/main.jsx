@@ -6,11 +6,8 @@ import App from './App.jsx'
 import {createBrowserRouter, Navigate, RouterProvider, Outlet} from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
-import Login from "./pages/Auth/Login.jsx";
-import Registration from "./pages/Auth/Registration.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/AdminProtectedRoute.jsx";
-import Verification from "./pages/Auth/Verification.jsx";
 import BookDetail from './pages/Books/BookDetail';
 import Profile from './pages/Users/Profile.jsx';
 import BookCatalog from './pages/Books/BookCatalog';
@@ -32,9 +29,6 @@ const router = createBrowserRouter([
         path: '/',
         element: <Landingpage />,
     },
-    { path: '/login', element: <Login />,},
-    { path: '/registration', element: <Registration />,},
-    { path: '/verification', element: <Verification />,},
     // Onboarding route - protected, shown after auth before home
     { 
         path: '/onboarding', 

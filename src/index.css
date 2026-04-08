@@ -6,6 +6,7 @@
   --color-secondary: #10b981; /* emerald-500 */
   --color-background: #f9f9f9;
   --color-text: #111827;
+  --font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 @theme {

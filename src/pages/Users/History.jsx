@@ -21,7 +21,7 @@ const History = () => {
             if (firebaseUser) {
                 setUserId(firebaseUser.uid);
             } else {
-                navigate("/login");
+                navigate("/");
             }
         });
         return () => unsubscribeAuth();

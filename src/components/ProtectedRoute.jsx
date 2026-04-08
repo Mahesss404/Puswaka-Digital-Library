@@ -63,7 +63,7 @@ const ProtectedRoute = ({ children }) => {
 
     // Redirect to login if not authenticated
     if (!authState.isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     // ADMIN users can only access /admin routes - redirect them to admin dashboard

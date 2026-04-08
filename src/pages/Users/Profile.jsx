@@ -15,7 +15,7 @@ const Profile = () => {
     // Handle logout
     const handleLogout = async () => {
         await signOut(auth);
-        navigate('/login');
+        navigate('/');
     };
 
     // Get current auth user and fetch profile by UID
@@ -37,7 +37,7 @@ const Profile = () => {
                     setLoading(false);
                 }
             } else {
-                navigate("/login");
+                navigate("/");
             }
         });
         return () => unsubscribeAuth();

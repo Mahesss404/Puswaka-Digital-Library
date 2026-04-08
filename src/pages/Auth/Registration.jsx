@@ -8,6 +8,7 @@ const Registration = () => {
     
     // Step management
     const [currentStep, setCurrentStep] = useState(1);
+    const [showDataDialog, setShowDataDialog] = useState(false);
     
     // Step 1: ID Card Upload
     const [image, setImage] = useState(null);
@@ -105,6 +106,7 @@ const Registration = () => {
                 setExtractedData(null);
             } else {
                 setExtractedData(data);
+                setShowDataDialog(true);
                 // Save to localStorage
                 localStorage.setItem("idCardData", JSON.stringify(data));
             }
@@ -185,7 +187,7 @@ const Registration = () => {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-            <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+            <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md transition-all duration-300">
                 {/* Progress Steps */}
                 <div className="flex items-center justify-center mb-6">
                     <div className={`flex items-center justify-center w-10 h-10 rounded-full ${currentStep >= 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
@@ -209,90 +211,138 @@ const Registration = () => {
                             Upload your student ID card to extract your information
                         </p>
 
-                        {/* Upload Area */}
-                        <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-xl mb-4 hover:border-blue-400 transition-colors">
-                            <p className="mb-3 text-sm text-gray-500">Choose a file with a size up to 2MB</p>
-                            <input
-                                name="fileUpload"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer"
-                            />
+                        {/* Upload Section */}
+                        <div className="flex flex-col">
+                            {/* Upload Area */}
+                            <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-xl mb-4 hover:border-blue-400 transition-colors">
+                                <div className="flex flex-col items-center justify-center">
+                                    <svg className="w-10 h-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <p className="mb-3 text-sm text-gray-500">Choose a file with a size up to 2MB</p>
+                                    <input
+                                        name="fileUpload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Error Message */}
+                            {extractError && (
+                                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
+                                    <XCircle className="w-4 h-4 flex-shrink-0" />
+                                    {extractError}
+                                </div>
+                            )}
+
+                            {/* Preview */}
+                            {image && (
+                                <div className="mb-4">
+                                    <img
+                                        src={image}
+                                        alt="Preview"
+                                        className="rounded-lg shadow-sm border w-full object-cover"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Extract button */}
+                            <button
+                                onClick={handleExtract}
+                                disabled={loading || !image}
+                                className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Processing...
+                                    </>
+                                ) : (
+                                    "Extract Data"
+                                )}
+                            </button>
                         </div>
 
-                        {/* Error Message */}
-                        {extractError && (
-                            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
-                                <XCircle className="w-4 h-4" />
-                                {extractError}
-                            </div>
-                        )}
-
-                        {/* Preview */}
-                        {image && (
-                            <div className="mb-4">
-                                <img
-                                    src={image}
-                                    alt="Preview"
-                                    className="rounded-lg shadow-sm border w-full"
+                        {/* Extracted Data Popup Dialog */}
+                        {showDataDialog && extractedData && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                {/* Backdrop */}
+                                <div
+                                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                                    onClick={() => setShowDataDialog(false)}
                                 />
-                            </div>
-                        )}
+                                {/* Dialog */}
+                                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-[fadeInUp_0.3s_ease-out]">
+                                    {/* Close button */}
+                                    <button
+                                        onClick={() => setShowDataDialog(false)}
+                                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+                                    >
+                                        <XCircle className="w-5 h-5" />
+                                    </button>
 
-                        {/* Extract button */}
-                        <button
-                            onClick={handleExtract}
-                            disabled={loading || !image}
-                            className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Processing...
-                                </>
-                            ) : (
-                                "Extract Data"
-                            )}
-                        </button>
+                                    {/* Header */}
+                                    <div className="flex items-center gap-2 mb-5">
+                                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                            <CheckCircle className="w-6 h-6 text-green-500" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-800">Data Extracted Successfully</h3>
+                                            <p className="text-xs text-gray-400">Please verify the information below</p>
+                                        </div>
+                                    </div>
 
-                        {/* Extracted Data Preview (Read-only) */}
-                        {extractedData && (
-                            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <CheckCircle className="w-5 h-5 text-green-500" />
-                                    <h3 className="text-lg font-semibold text-green-700">Data Extracted Successfully</h3>
+                                    {/* Extracted Data Fields */}
+                                    <div className="space-y-3 mb-6">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                                            <div className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium">
+                                                {extractedData.name}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Address</label>
+                                            <div className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium">
+                                                {extractedData.address}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">ID Number (NIS)</label>
+                                            <div className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 font-medium">
+                                                {extractedData.idNumber}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex flex-col gap-2">
+                                        <button
+                                            onClick={() => {
+                                                setShowDataDialog(false);
+                                                handleNextStep();
+                                            }}
+                                            className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition font-medium flex items-center justify-center gap-2"
+                                        >
+                                            Continue to Next Step
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowDataDialog(false);
+                                                setExtractedData(null);
+                                                setImage(null);
+                                            }}
+                                            className="w-full py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+                                        >
+                                            Re-upload ID Card
+                                        </button>
+                                    </div>
                                 </div>
-                                
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
-                                        <div className="w-full p-3 bg-white border border-gray-200 rounded-lg text-gray-800">
-                                            {extractedData.name}
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Address</label>
-                                        <div className="w-full p-3 bg-white border border-gray-200 rounded-lg text-gray-800">
-                                            {extractedData.address}
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">ID Number (NIS)</label>
-                                        <div className="w-full p-3 bg-white border border-gray-200 rounded-lg text-gray-800">
-                                            {extractedData.idNumber}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleNextStep}
-                                    className="w-full mt-4 bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition font-medium"
-                                >
-                                    Continue →
-                                </button>
                             </div>
                         )}
 

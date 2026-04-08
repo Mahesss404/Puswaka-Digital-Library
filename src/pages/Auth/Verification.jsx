@@ -112,8 +112,8 @@ const Verification = () => {
     // Redirect if no phone number
     useEffect(() => {
         if (!phoneNumber && mounted) {
-            console.log('No phone number, redirecting to:', mode === 'login' ? '/login' : '/registration');
-            navigate(mode === 'login' ? '/login' : '/registration', { replace: true });
+            console.log('No phone number, redirecting to: /');
+            navigate('/', { replace: true });
         }
     }, [phoneNumber, navigate, mode, mounted]);
     
@@ -430,7 +430,7 @@ const Verification = () => {
                 {/* Back link */}
                 <div className="mt-6 text-center">
                     <button
-                        onClick={() => navigate(mode === 'login' ? '/login' : '/registration')}
+                        onClick={() => navigate('/')}
                         className="text-sm text-gray-500 hover:text-gray-700 underline"
                     >
                         ← {mode === 'login' ? 'Back to login' : 'Back to signup'}

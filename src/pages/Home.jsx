@@ -48,7 +48,7 @@ const Home = () => {
                 setUserId(user.uid);
                 setUsername(user.displayName || user.email?.split("@")[0] || "User");
             } else {
-                navigate("/login");
+                navigate("/");
             }
         });
 
