@@ -110,20 +110,36 @@ const Notification = () => {
                 const due = new Date(borrow.dueDate);
                 // Check if currently overdue (not returned yet AND past due date)
                 if (!borrow.returnDate && now > due) {
-                    // Calculate fine for context
-                    const fine = calculateOverdueFine(borrow.dueDate);
-                    generatedNotifications.push({
-                        id: `${borrow.id}_overdue`,
-                        borrowId: borrow.id,
-                        title: `Peringatan: Buku Terlambat!`,
-                        content: `Buku "${borrow.bookTitle}" seharusnya dikembalikan pada ${borrow.dueDate.toLocaleDateString('id-ID')}. Anda dikenakan denda keterlambatan. Harap segera melakukan pengembalian ke perpustakaan.`,
-                        date: now, // Alert time is NOW
-                        category: 'Alert',
-                        isRead: false,
-                        type: 'overdue_alert',
-                        originalData: borrow,
-                        fine: fine
-                    });
+                    // If payment is pending, show a different message
+                    if (borrow.fineStatus === 'pending') {
+                        generatedNotifications.push({
+                            id: `${borrow.id}_overdue`,
+                            borrowId: borrow.id,
+                            title: `Menunggu Konfirmasi Pembayaran: ${borrow.bookTitle}`,
+                            content: `Pembayaran denda untuk buku "${borrow.bookTitle}" sedang diproses. Status akan diperbarui otomatis setelah konfirmasi dari bank.`,
+                            date: now,
+                            category: 'Alert',
+                            isRead: false,
+                            type: 'payment_pending',
+                            originalData: borrow,
+                            fine: 0
+                        });
+                    } else {
+                        // Standard overdue alert
+                        const fine = calculateOverdueFine(borrow.dueDate);
+                        generatedNotifications.push({
+                            id: `${borrow.id}_overdue`,
+                            borrowId: borrow.id,
+                            title: `Peringatan: Buku Terlambat!`,
+                            content: `Buku "${borrow.bookTitle}" seharusnya dikembalikan pada ${borrow.dueDate.toLocaleDateString('id-ID')}. Anda dikenakan denda keterlambatan. Harap segera melakukan pengembalian ke perpustakaan.`,
+                            date: now, // Alert time is NOW
+                            category: 'Alert',
+                            isRead: false,
+                            type: 'overdue_alert',
+                            originalData: borrow,
+                            fine: fine
+                        });
+                    }
                 }
             });
 

@@ -1,7 +1,7 @@
 import { Text } from '@/components/ui/text';
 import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, AlertCircle } from 'lucide-react';
+import { Calendar, AlertCircle, CreditCard, Clock } from 'lucide-react';
 import { calculateOverdueFine } from './Notification';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import DynamicBreadcrumb from '@/components/DynamicBreadcrumb';
@@ -89,10 +89,34 @@ const NotificationDetails = () => {
                                 <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
                                 <Text size="md" className="font-semibold text-red-800">Denda Keterlambatan: Rp{fineAmount.toLocaleString()}</Text>
                             </div>
-                            <Text className="text-sm text-red-700 mt-1">
+                            <Text className="text-sm text-red-700 mt-1 text-center">
                                 Buku ini telah melewati tanggal pengembalian ({new Date(notification.originalData.dueDate).toLocaleDateString('id-ID')}). 
-                                Harap segera lunasi denda di perpustakaan.
+                                Harap segera lunasi denda.
                             </Text>
+
+                            {/* Payment action area */}
+                            {notification.originalData?.fineStatus === 'pending' ? (
+                                // Pending state – pembayaran sedang diproses
+                                <div className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <Clock className="w-4 h-4 text-amber-600" />
+                                    <span className="text-sm font-medium text-amber-700">
+                                        Menunggu konfirmasi pembayaran...
+                                    </span>
+                                </div>
+                            ) : (
+                                // Default – tampilkan tombol bayar
+                                <button
+                                    onClick={() =>
+                                        navigate(`/notification/${id}/payment`, {
+                                            state: { notification },
+                                        })
+                                    }
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white rounded-lg font-semibold text-sm transition-all shadow-md hover:shadow-lg"
+                                >
+                                    <CreditCard className="w-4 h-4" />
+                                    Bayar Denda Sekarang
+                                </button>
+                            )}
                         </CardContent>
                     )}
 

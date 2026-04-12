@@ -15,6 +15,7 @@ import CategoryCatalog from './pages/Books/CategoryCatalog';
 import History from './pages/Users/History';
 import Notification from './pages/Users/Notification/Notification';
 import NotificationDetails from './pages/Users/Notification/NotificationDetails';
+import OverduePayment from './pages/Users/Notification/OverduePayment';
 import Dashboard from './pages/Admin/Dashboard';
 import DashboardBooks from './pages/Admin/Dashboard/Books';
 import DashboardMembers from './pages/Admin/Dashboard/Members';
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
             { path: '/catalog/:categoryId/:bookId', element: <BookDetail /> },
             { path: '/notification', element: <Notification /> },
             { path: '/notification/:id', element: <NotificationDetails /> },
+            { path: '/notification/:id/payment', element: <OverduePayment /> },
         ]
     },
     // Admin routes - separate from user routes, only ADMIN role can access

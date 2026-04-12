@@ -47,25 +47,6 @@ const MembersManagement = () => {
     return () => usersUnsubscribe();
   }, []);
 
-  // Function to generate unique user ID from name
-  const generateUserId = (name) => {
-    if (!name || name.trim().length === 0) {
-      return '';
-    }
-    
-    const cleanName = name.trim().toLowerCase().replace(/\s+/g, '');
-    if (cleanName.length < 2) {
-      const paddedName = cleanName.padEnd(2, 'x');
-      const twoLetters = paddedName.substring(0, 2);
-      const randomNum = Math.floor(Math.random() * 90) + 10;
-      return twoLetters + randomNum;
-    }
-    
-    const twoLetters = cleanName.substring(0, 2);
-    const randomNum = Math.floor(Math.random() * 90) + 10;
-    return twoLetters + randomNum;
-  };
-
   // Check if user ID is unique
   const isUserIdUnique = async (userId) => {
     if (!userId) return false;
@@ -83,46 +64,19 @@ const MembersManagement = () => {
     }
   };
 
-  // Generate unique user ID (retry if not unique)
-  const generateUniqueUserId = async (name) => {
-    let userId = generateUserId(name);
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    while (!(await isUserIdUnique(userId)) && attempts < maxAttempts) {
-      userId = generateUserId(name);
-      attempts++;
-    }
-    
-    if (attempts >= maxAttempts) {
-      const baseId = generateUserId(name);
-      const timestamp = Date.now().toString().slice(-2);
-      return baseId.substring(0, 2) + timestamp;
-    }
-    
-    return userId;
-  };
-
   const handleAddUser = async () => {
-    if (!userForm.name || !userForm.phoneNumber) {
-      alert('Please fill in all required fields (Name and Phone Number)');
+    if (!userForm.name || !userForm.phoneNumber || !userForm.idNumber) {
+      alert('Please fill in all required fields (Name, Phone Number, and NIS)');
       return;
     }
     
     try {
-      let finalIdNumber = userForm.idNumber;
-      if (!finalIdNumber || finalIdNumber.trim() === '') {
-        finalIdNumber = await generateUniqueUserId(userForm.name);
-      }
+      const finalIdNumber = userForm.idNumber.trim();
       
-      const existingUserQuery = query(
-        collection(db, 'users'),
-        where('idNumber', '==', finalIdNumber)
-      );
-      const existingUserSnapshot = await getDocs(existingUserQuery);
-      
-      if (!existingUserSnapshot.empty) {
-        finalIdNumber = await generateUniqueUserId(userForm.name);
+      const isUnique = await isUserIdUnique(finalIdNumber);
+      if (!isUnique) {
+        alert('NIS already exists. Please use a unique NIS.');
+        return;
       }
       
       const newUser = {
@@ -278,15 +232,7 @@ const MembersManagement = () => {
                 type="text"
                 placeholder="Full Name *"
                 value={userForm.name}
-                onChange={(e) => {
-                  const newName = e.target.value;
-                  if (newName.trim().length >= 2) {
-                    const generatedId = generateUserId(newName);
-                    setUserForm(prev => ({ ...prev, name: newName, idNumber: generatedId }));
-                  } else {
-                    setUserForm(prev => ({ ...prev, name: newName, idNumber: '' }));
-                  }
-                }}
+                onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
                 className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4995ED]/20 focus:border-[#4995ED]"
               />
               <input
@@ -312,18 +258,15 @@ const MembersManagement = () => {
               />
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  NIS / ID Number (Auto-generated)
+                  NIS / ID Number *
                 </label>
                 <input
                   type="text"
-                  placeholder="NIS"
+                  placeholder="Enter NIS"
                   value={userForm.idNumber}
-                  readOnly
-                  className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg bg-neutral-50 text-neutral-600 cursor-not-allowed"
+                  onChange={(e) => setUserForm({ ...userForm, idNumber: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4995ED]/20 focus:border-[#4995ED]"
                 />
-                <p className="text-xs text-neutral-500 mt-1">
-                  ID is auto-generated from name (2 letters + 2 random digits)
-                </p>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -400,7 +343,7 @@ const MembersManagement = () => {
                   NIS / ID Number
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={userForm.idNumber}
                   readOnly
                   className="w-full px-4 py-2.5 border border-neutral-200 rounded-lg bg-neutral-50 text-neutral-600 cursor-not-allowed"

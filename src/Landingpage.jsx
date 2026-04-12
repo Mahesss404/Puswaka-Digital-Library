@@ -692,7 +692,7 @@ const Landingpage = () => {
                                 Login
                             </button>
                             <button
-                                onClick={() => navigate('/registration')}
+                                onClick={() => openModal('register')}
                                 className="px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5 rounded-xl transition-all duration-300"
                             >
                                 Register
@@ -722,7 +722,7 @@ const Landingpage = () => {
                             <a href="#benefits" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">Benefits</a>
                             <a href="#faq" className="px-4 py-2 text-gray-700 hover:bg-primary/5 rounded-lg transition-colors">FAQ</a>
                             <hr className="my-2 border-gray-200" />
-                            <button onClick={() => navigate('/registration')} className="px-4 py-2 text-primary font-semibold hover:bg-primary/5 rounded-lg transition-colors text-left">
+                            <button onClick={() => openModal('register')} className="px-4 py-2 text-primary font-semibold hover:bg-primary/5 rounded-lg transition-colors text-left">
                                 Register
                             </button>
                             <button onClick={() => openModal('login')} className="mx-4 py-2.5 text-center font-semibold text-white bg-gradient-to-r from-primary to-blue-600 rounded-xl">

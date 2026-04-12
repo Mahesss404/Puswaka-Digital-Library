@@ -465,15 +465,22 @@ const TransactionsManagement = () => {
                     </td>
                     <td className="px-6 py-4">
                       {record.status === 'borrowed' ? (
-                        record.dueDate && isOverdue(record.dueDate) ? (
-                          <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 border border-red-200">
-                            <AlertCircle className="mr-1 h-3 w-3" /> Overdue
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">
-                            <Clock className="mr-1 h-3 w-3" /> Active
-                          </span>
-                        )
+                        <div className="flex flex-col gap-1">
+                          {record.dueDate && isOverdue(record.dueDate) ? (
+                            <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 border border-red-200">
+                              <AlertCircle className="mr-1 h-3 w-3" /> Overdue
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">
+                              <Clock className="mr-1 h-3 w-3" /> Active
+                            </span>
+                          )}
+                          {record.fineStatus === 'pending' && (
+                            <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
+                              <CreditCard className="mr-1 h-3 w-3" /> Bayar Pending
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 border border-emerald-200">
                           <CheckCircle className="mr-1 h-3 w-3" /> Returned
