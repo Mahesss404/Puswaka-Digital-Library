@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Menu, Search, X, Bell, Home, BookOpen, Bookmark, User, Settings, History, Library } from 'lucide-react';
+import { Menu, Search, X, Bell, Home, BookOpen, User, History, Library } from 'lucide-react';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '@/lib/firebase';
@@ -26,7 +26,6 @@ const Header = () => {
         { label: 'Book Catalog', path: '/catalog', icon: BookOpen },
         { label: 'History', path: '/history', icon: History },
         { label: 'Profile', path: '/profile', icon: User },
-        { label: 'Settings', path: '/settings', icon: Settings }
     ];
 
     // Handle menu navigation
